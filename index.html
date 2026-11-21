@@ -1056,7 +1056,7 @@ table.hist td:first-child, table.hist th:first-child { text-align: left; }
       document.addEventListener('visibilitychange', () => { if (document.hidden) this.stop(); else if (this.active) this.start(); });
     }
     setZoom(z) { this.zoom = clamp(z, .35, 1.9); }
-    resize() { const w = this.c.clientWidth, h = this.c.clientHeight; if (!w || !h) return; this.r.setSize(w, h); this.cam.aspect = w / h; this.cam.updateProjectionMatrix(); }
+    resize() { const w = this.c.clientWidth, h = this.c.clientHeight; if (!w || !h) return; this.r.setSize(w, h); this.cam.aspect = w / h; this.cam.setViewOffset(w, h, 0, -h * .045, w, h); this.cam.updateProjectionMatrix(); } // baja un poco el encuadre para que la etiqueta de material no tape la cabeza
     base() { return { ...CAM0, ...(this.ex.cam || {}) }; }
     show(ex, opts = {}) {
       this.ex = prepare(ex); this.bad = !!opts.bad; this.t = 0; setup(this.st, ex, { bad: this.bad });
@@ -1084,7 +1084,7 @@ table.hist td:first-child, table.hist th:first-child { text-align: left; }
       const fd = J.root.getWorldDirection(V()), face = Math.atan2(fd.x, fd.z) / D; // hacia dónde mira ella
       this.goal.az = (h > .14 ? Math.atan2(vx, vz) / D : face + (this.ex.hands === 'plank' ? 90 : 0)) + 20; // en diagonal para ver dedos y pulgar
       this.goal.d = clamp(1.05 + sp * 1.7, 1.3, 2.5); this.goal.el = 14;
-      const hc = this.ex.handsCam; if (hc) { Object.assign(this.goal, hc); return; }
+      this.goal.hand = null; const hc = this.ex.handsCam; if (hc) { Object.assign(this.goal, hc); return; }
       // Busca el ángulo más cercano desde el que ninguna máquina ni el propio cuerpo tapa las manos
       const st = this.st, rc = new T.Raycaster(), skip = new Set(st.scene.children.filter(o => o.isMesh));
       const occ = []; st.scene.traverse(o => { if (o.isMesh && !skip.has(o) && o.visible) occ.push(o); });
@@ -1106,10 +1106,10 @@ table.hist td:first-child, table.hist th:first-child { text-align: left; }
       if (this.playing) this.t += dt * this.speed;
       frame(this.st, this.ex, this.t);
       const g = this.goal, c = this.cur, k = 1 - Math.pow(.0015, dt);
-      if (g.follow) { const J = this.st.J, p = J.lGrip.getWorldPosition(V()).add(J.rGrip.getWorldPosition(V())).multiplyScalar(.5); g.tx = p.x; g.ty = p.y; g.tz = p.z; }
+      if (g.follow) { const J = this.st.J, p = g.hand ? J[g.hand + 'Grip'].getWorldPosition(V()) : J.lGrip.getWorldPosition(V()).add(J.rGrip.getWorldPosition(V())).multiplyScalar(.5); g.tx = p.x; g.ty = p.y; g.tz = p.z; }
       else { const b = this.base(); g.tx = b.tx || 0; g.ty = b.ty; g.tz = b.tz || 0; }
       let daz = ((g.az - c.az + 540) % 360) - 180;
-      c.az += daz * k; c.el += (g.el - c.el) * k; c.d += (g.d * this.zoom - c.d) * k;
+      c.az += daz * k; c.el += (g.el - c.el) * k; c.d += (g.d * this.zoom * (g.follow ? 1 : 1.08) - c.d) * k;
       c.tx = (c.tx ?? g.tx) + (g.tx - (c.tx ?? g.tx)) * k; c.ty += (g.ty - c.ty) * k; c.tz = (c.tz ?? g.tz) + (g.tz - (c.tz ?? g.tz)) * k;
       placeCam(this.cam, c, c.az);
       this.r.render(this.st.scene, this.cam);
@@ -1526,6 +1526,7 @@ table.hist td:first-child, table.hist th:first-child { text-align: left; }
   X.gobletHeels.bad = { delta: [null, { root: { p: [0, .5, -.16], r: [34, 0, 0] }, spine: [26, 0, 0] }] };
   X.hackSquat.bad = { delta: [null, { legs: { t: [.14, .1, .28], pole: [-.7, 0, 1], fp: -12 } }] };
   X.uprightRow.bad = { delta: [{ arms: { t: [.06, .76, .15], pole: [1, .3, -.3] } }, { arms: { t: [.06, 1.36, .1], pole: [1, .8, -.2] } }] };
+  X.latRaise.handsCam = { az: 35, el: 12, d: 1.5, hand: 'l' };
   Object.keys(X).forEach(k => { X[k].id = k; });
   window.EX3D = X;
 })();
