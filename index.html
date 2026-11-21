@@ -697,6 +697,27 @@ table.hist td:first-child, table.hist th:first-child { text-align: left; }
 .ladder { display: grid; gap: 6px; padding: 12px 14px; border-radius: 14px; background: linear-gradient(135deg, rgba(255,212,59,.12), rgba(255,212,59,.02)); border: 1px solid rgba(255,212,59,.3); margin-bottom: 12px; } .ldh { display: flex; justify-content: space-between; align-items: baseline; } .ldh .mono { color: #FFD43B; } .ldh b { font-size: 18px; }
 .ladder .bar i { background: linear-gradient(90deg, #FFE78A, #FFD43B); box-shadow: 0 0 12px rgba(255,212,59,.6); }
 @media (prefers-reduced-motion: reduce) { .boom .rays, .boom.on .ring, .boom.on .medalw, .boom.on .medal::after, .boom.on .mono, .boom.on h2, .boom.on .bnum, .boom.on p, .boom.on .btn, .setrow.on .ok, .checkrow.on .box { animation: none !important; } .bar i { transition: none; } }
+
+/* ===== v5.1: fotos de progreso y comparación ===== */
+.phadd { display: grid; gap: 10px; } .phadd p { margin: 0; }
+.phposes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; } .phposes .btn { padding: 0 6px; height: 44px; }
+.phday { margin-top: 16px; } .phdh { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; } .phdh b { font-size: 15px; } .phdh span { font-family: var(--f-mono); font-size: 12px; color: var(--ink2); }
+.phgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.ph1 { position: relative; aspect-ratio: 3 / 4; border-radius: 14px; overflow: hidden; background: var(--bg3); border: 1px solid var(--line2); }
+.ph1 img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ph1 span { position: absolute; left: 6px; bottom: 6px; padding: 3px 8px; border-radius: 999px; background: rgba(7,8,11,.72); font-size: 11px; font-weight: 700; color: #fff; backdrop-filter: blur(6px); }
+.lb { position: fixed; inset: 0; z-index: 105; background: rgba(4,5,8,.97); display: none; flex-direction: column; padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px); overflow-y: auto; }
+.lb.on { display: flex; }
+.lbh { display: grid; grid-template-columns: 40px minmax(0,1fr); gap: 12px; align-items: center; padding: 10px 16px; flex: none; }
+.lbh b { display: block; font-family: var(--f-display); font-size: 22px; font-weight: 800; text-transform: uppercase; font-stretch: 82%; line-height: 1.05; } .lbh span { font-size: 13px; color: var(--ink2); }
+.lbimg { flex: 1; min-height: 0; display: grid; place-items: center; padding: 0 10px; } .lbimg img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 16px; }
+.lb.one { overflow: hidden; } .lb.one .lbimg { height: 0; }
+.lbf { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 12px 12px 14px; flex: none; } .lbf .btn { padding: 0 6px; font-size: 12.5px; } .lbf .btn:disabled { opacity: .35; } .lbf .warnb { border-color: var(--red); color: #FF8091; grid-column: span 2; }
+.cmpv { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 0 10px; } .cmpv figure { margin: 0; display: grid; gap: 6px; min-width: 0; }
+.cmpv select { height: 40px; border-radius: 11px; border: 1px solid var(--line2); background: var(--bg2); color: var(--ink); padding: 0 8px; font-size: 13px; font-weight: 600; width: 100%; }
+.cmpv figure > div { aspect-ratio: 3 / 4; border-radius: 14px; overflow: hidden; background: var(--bg3); border: 1px solid var(--line2); } .cmpv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cmpv figcaption { text-align: center; font-size: 12.5px; } .cmpv figure:last-child > div { border-color: rgba(46,229,157,.5); box-shadow: 0 0 18px rgba(46,229,157,.2); }
+.cmpt { margin: 14px 16px 20px; width: calc(100% - 32px); } .cmpt td.chg { color: var(--good); font-weight: 800; }
 </style>
 <main class="app"><div id="view"></div></main>
 <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
@@ -3011,6 +3032,59 @@ const Store = (() => {
     return `<div class="lifts">${rows.map(({ id, h }) => { const f = h[0].top, l = h[h.length - 1].top, as = !!EXI[id].assist, d = r1(l - f), good = as ? d < 0 : d > 0;
       return `<button class="lift" data-open="${id}"><span class="ln"><b>${esc(EXI[id].n)}</b><small>${h.length} ${h.length === 1 ? 'sesión' : 'sesiones'} · última ${nice(h[h.length - 1].k)}</small></span>${spark(h.map(x => x.top), as)}<span class="lv num"><b>${fmt(l, 1)}</b><small class="${good ? 'up' : 'flat'}">${d === 0 ? '=' : (d > 0 ? '+' : '') + fmt(d, 1)}</small></span></button>`; }).join('')}</div>`;
   }
+  /* ---------- Fotos de progreso: se guardan reducidas y solo en este móvil ---------- */
+  const FDB = { db: null,
+    open() { return new Promise((res, rej) => { if (FDB.db) return res(FDB.db); const r = indexedDB.open('saragym-fotos', 1); r.onupgradeneeded = () => r.result.createObjectStore('f'); r.onsuccess = () => { FDB.db = r.result; res(FDB.db); }; r.onerror = () => rej(r.error); }); },
+    tx(mode, fn) { return FDB.open().then(db => new Promise((res, rej) => { const t = db.transaction('f', mode), rq = fn(t.objectStore('f')); t.oncomplete = () => res(rq && rq.result); t.onerror = () => rej(t.error); })); },
+    put: (id, v) => FDB.tx('readwrite', st => st.put(v, id)), get: (id) => FDB.tx('readonly', st => st.get(id)), del: (id) => FDB.tx('readwrite', st => st.delete(id)) };
+  const fURL = {};
+  async function photoURL(id) { if (fURL[id]) return fURL[id]; try { const b = await FDB.get(id); if (!b) return null; return fURL[id] = URL.createObjectURL(b); } catch (e) { return null; } }
+  async function shrink(file) {
+    let img = null; try { img = await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch (e) { }
+    if (!img) img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = URL.createObjectURL(file); });
+    const sc = Math.min(1, 1400 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); return new Promise(res => c.toBlob(res, 'image/jpeg', .85));
+  }
+  const POSE = { f: 'Frente', l: 'Lado', e: 'Espalda' };
+  const longDate = (k) => { const d = parse(k); return `${d.getDate()} de ${['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'][d.getMonth()]} de ${d.getFullYear()}`; };
+  /* La medición más cercana a una fecha (hasta 10 días de diferencia) */
+  function measNear(k) { const t = parse(k).getTime(); let best = null, bd = 11; S.measures.forEach(m => { const d = Math.abs(parse(m.date).getTime() - t) / 864e5; if (d < bd) { bd = d; best = m; } }); return best; }
+  const measLine = (m) => m ? [m.weight && `${fmt(m.weight, 1)} kg`, m.waist && `cintura ${cm(m.waist)}`, m.hip && `cadera ${cm(m.hip)}`, m.thigh && `muslo ${cm(m.thigh)}`, m.arm && `brazo ${cm(m.arm)}`].filter(Boolean).join(' · ') : '';
+  const photosSorted = () => [...(S.photos || [])].sort((a, b) => a.d < b.d ? 1 : a.d > b.d ? -1 : 0);
+  function photosSection() {
+    const P = photosSorted(), byD = {}; P.forEach(x => (byD[x.d] = byD[x.d] || []).push(x)); const days = Object.keys(byD), weeks = P.length > 1 ? Math.round((parse(P[0].d) - parse(P[P.length - 1].d)) / 6048e5) : 0;
+    return `<h2 class="sec">Tus fotos <span class="mono">${P.length ? `${P.length} · solo en este móvil` : 'solo en este móvil'}</span></h2>
+      <div class="card glass phadd"><div class="field"><label for="phDate">Fecha de la foto</label><input id="phDate" type="date" value="${key(today())}" max="${key(today())}"></div>
+        <div class="phposes">${Object.entries(POSE).map(([k, t]) => `<button class="btn sm ghost" data-phadd="${k}">${ic('cam')}${t}</button>`).join('')}</div><input type="file" id="phIn" accept="image/*" hidden><span class="mono" id="phOk"></span>
+        <p class="small muted">Mismo sitio, misma luz y misma hora cada vez. Con una cada dos semanas basta. Las fotos no salen de tu móvil.</p></div>
+      ${P.length >= 2 ? `<button class="btn block" id="phCmp" style="margin-top:10px">${ic('swap')}Comparar antes y después${weeks ? ` · ${weeks} ${weeks === 1 ? 'semana' : 'semanas'}` : ''}</button>` : ''}
+      ${days.length ? days.map(d => { const m = measNear(d); return `<div class="phday"><div class="phdh"><b>${longDate(d)}</b>${m && m.weight ? `<span class="num">${fmt(m.weight, 1)} kg</span>` : ''}</div><div class="phgrid">${byD[d].map(x => `<button class="ph1" data-phopen="${x.id}"><img data-ph="${x.id}" alt="${POSE[x.p]} · ${nice(x.d)}"><span>${POSE[x.p]}</span></button>`).join('')}</div></div>`; }).join('') : `<div class="empty small" style="margin-top:10px">Aún no hay fotos. La primera es la más valiosa: dentro de unas semanas te alegrarás de tenerla.</div>`}`;
+  }
+  async function fillPhotos(root = document) { for (const im of $$('img[data-ph]', root)) { const u = await photoURL(im.dataset.ph); if (u) im.src = u; } }
+  function layer(cls, html) { let el = $('#lb'); if (!el) { el = document.createElement('div'); el.id = 'lb'; document.body.appendChild(el); } el.className = 'lb on ' + cls; el.innerHTML = html; document.body.style.overflow = 'hidden'; return el; }
+  function closeLayer() { const el = $('#lb'); if (el) { el.className = 'lb'; el.innerHTML = ''; } document.body.style.overflow = ''; }
+  function openPhoto(id) {
+    const P = photosSorted(), i = P.findIndex(x => x.id === id); if (i < 0) return; const x = P[i], m = measNear(x.d);
+    const el = layer('one', `<div class="lbh"><button class="iconbtn" data-lb="x" aria-label="Cerrar">${ic('x')}</button><div><b>${longDate(x.d)}</b><span>${POSE[x.p]}${m ? ' · ' + measLine(m) : ''}</span></div></div>
+      <div class="lbimg"><img data-ph="${x.id}" alt=""></div>
+      <div class="lbf"><button class="btn sm ghost" data-lb="prev" ${i >= P.length - 1 ? 'disabled' : ''}>${ic('back')}Anterior</button><button class="btn sm ghost" data-lb="dl">${ic('down')}Guardar</button><button class="btn sm ghost" data-lb="del">Borrar</button><button class="btn sm ghost" data-lb="next" ${i <= 0 ? 'disabled' : ''}>Siguiente${ic('chev')}</button></div>`);
+    fillPhotos(el); let sure = false;
+    el.onclick = async (ev) => { const b = ev.target.closest('[data-lb]'); if (!b) return; const a = b.dataset.lb;
+      if (a === 'x') closeLayer(); else if (a === 'prev') openPhoto(P[i + 1].id); else if (a === 'next') openPhoto(P[i - 1].id);
+      else if (a === 'dl') { const u = await photoURL(x.id); if (u) { const l = document.createElement('a'); l.href = u; l.download = `saragym-${x.d}-${POSE[x.p].toLowerCase()}.jpg`; document.body.appendChild(l); l.click(); l.remove(); } }
+      else if (a === 'del') { if (!sure) { sure = true; b.textContent = '¿Seguro? Toca otra vez'; b.classList.add('warnb'); return; } S.photos = (S.photos || []).filter(y => y.id !== x.id); save(true); try { await FDB.del(x.id); } catch (e) { } closeLayer(); render(); } };
+  }
+  function openCompare(aId, bId) {
+    const P = photosSorted(); if (P.length < 2) return; const last = P[0], firstSame = [...P].reverse().find(y => y.p === last.p && y.id !== last.id) || P[P.length - 1];
+    const A = P.find(y => y.id === aId) || firstSame, B = P.find(y => y.id === bId) || last, mA = measNear(A.d), mB = measNear(B.d), days = Math.round((parse(B.d) - parse(A.d)) / 864e5);
+    const opt = (sel) => P.map(y => `<option value="${y.id}" ${y.id === sel ? 'selected' : ''}>${nice(y.d)} ${y.d.slice(2, 4)} · ${POSE[y.p]}</option>`).join('');
+    const rows = [['weight', 'Peso', 'kg'], ['waist', 'Cintura', 'cm'], ['hip', 'Cadera', 'cm'], ['thigh', 'Muslo', 'cm'], ['arm', 'Brazo', 'cm']].map(([f, t, u]) => { const a = mA && mA[f], b = mB && mB[f]; if (a == null && b == null) return ''; const d = a != null && b != null ? r1(b - a) : null; return `<tr><td>${t}</td><td>${a != null ? fmt(a, 1) : '—'}</td><td>${b != null ? fmt(b, 1) : '—'}</td><td class="${d ? 'chg' : ''}">${d == null ? '' : d === 0 ? 'igual' : `${d > 0 ? '+' : ''}${fmt(d, 1)} ${u}`}</td></tr>`; }).join('');
+    const el = layer('two', `<div class="lbh"><button class="iconbtn" data-lb="x" aria-label="Cerrar">${ic('x')}</button><div><b>Antes y después</b><span>${days > 0 ? `${days} días de diferencia` : days < 0 ? 'El orden está al revés: elige antes la más antigua' : 'Elige dos fechas distintas'}</span></div></div>
+      <div class="cmpv"><figure><select data-side="a">${opt(A.id)}</select><div><img data-ph="${A.id}" alt=""></div><figcaption><b>${longDate(A.d)}</b></figcaption></figure><figure><select data-side="b">${opt(B.id)}</select><div><img data-ph="${B.id}" alt=""></div><figcaption><b>${longDate(B.d)}</b></figcaption></figure></div>
+      ${rows ? `<table class="coach cmpt"><thead><tr><th></th><th>Antes</th><th>Después</th><th>Cambio</th></tr></thead><tbody>${rows}</tbody></table>` : `<p class="small muted" style="padding:0 16px">Apunta peso y medidas cerca de las fechas de las fotos y aquí verás también los números.</p>`}`);
+    fillPhotos(el); el.onclick = (ev) => { if (ev.target.closest('[data-lb="x"]')) closeLayer(); };
+    $$('select', el).forEach(sl => sl.onchange = () => openCompare(sl.dataset.side === 'a' ? sl.value : A.id, sl.dataset.side === 'b' ? sl.value : B.id));
+  }
   VIEWS.progreso = () => {
     const p = S.profile, ms = [...S.measures].sort((a, b) => a.date < b.date ? -1 : 1);
     const wpts = ms.filter(m => m.weight).map(m => ({ v: m.weight, l: nice(m.date) }));
@@ -3018,7 +3092,9 @@ const Store = (() => {
     const mini = (f, t) => { const pts = ms.filter(m => m[f]).map(m => ({ v: m[f], l: nice(m.date) })); return `<div class="card white" style="padding:12px"><span class="mono">${t}</span>${lineChart(pts, { h: 120, unit: '', W: 190 })}</div>`; };
     const wk = []; const mon = monday(today());
     for (let w = 5; w >= 0; w--) { const m0 = addD(mon, -7 * w); let kc = 0, dn = 0; for (let i = 0; i < 7; i++) { const k = key(addD(m0, i)); kc += kcalOf(k); if (S.log[k] && S.log[k].done) dn++; } wk.push({ l: w ? `S${isoWeek(m0)}` : 'Esta', v: kc, hl: !w, dn }); }
-    return `<div class="wrap"><div class="vhead"><span class="mono">Se guarda solo al pulsar</span><h1>Tu <em>progreso.</em></h1><p>Apunta peso y medidas cada 2 semanas, por la mañana y en ayunas. Si tienes las de tu entrenador, puedes apuntarlas con su fecha.</p></div>
+    return `<div class="wrap"><div class="vhead"><span class="mono">Se guarda solo al pulsar</span><h1>Tu <em>progreso.</em></h1><p>Fotos, peso y medidas cada 2 semanas, por la mañana y en ayunas. Tú llevas el seguimiento: todo queda guardado aquí con su fecha.</p></div>
+      ${photosSection()}
+      <h2 class="sec">Peso y medidas <span class="mono">añadir</span></h2>
       <form class="card" id="mForm" autocomplete="off">
         <div class="grid2"><div class="field"><label for="mDate">Fecha</label><input id="mDate" type="date" value="${key(today())}" required></div><div class="field"><label for="mW">Peso (kg)</label><input id="mW" type="number" step="0.1" inputmode="decimal" placeholder="${fmt(curWeight(), 1)}"></div></div>
         <div class="grid2" style="margin-top:10px"><div class="field"><label for="mWa">Cintura (cm)</label><input id="mWa" type="number" step="0.5" inputmode="decimal" placeholder="${last.waist || ''}"></div><div class="field"><label for="mHi">Cadera (cm)</label><input id="mHi" type="number" step="0.5" inputmode="decimal" placeholder="${last.hip || ''}"></div></div>
@@ -3039,6 +3115,13 @@ const Store = (() => {
     </div>`;
   };
   AFTER.progreso = () => {
+    fillPhotos(); let pose = 'f'; const pin = $('#phIn'), pok = $('#phOk');
+    $$('[data-phadd]').forEach(b => b.onclick = () => { pose = b.dataset.phadd; pin.value = ''; pin.click(); });
+    if (pin) pin.onchange = async () => { const f = pin.files && pin.files[0]; if (!f) return; pok.textContent = 'Guardando…';
+      try { const blob = await shrink(f), id = 'p' + Date.now().toString(36), d = $('#phDate').value || key(today()); await FDB.put(id, blob); S.photos = S.photos || []; S.photos.push({ id, d, p: pose }); save(true); render(); toast(`Foto de ${POSE[pose].toLowerCase()} guardada con fecha ${nice(d)}.`, 'Guardada', 'cam'); }
+      catch (e) { pok.textContent = 'No se ha podido guardar esa foto. Prueba con otra.'; } };
+    $$('[data-phopen]').forEach(b => b.onclick = () => openPhoto(b.dataset.phopen));
+    const pc = $('#phCmp'); if (pc) pc.onclick = () => openCompare();
     $('#mForm').onsubmit = (ev) => {
       ev.preventDefault(); const n = (id) => { const v = parseFloat(String($(id).value).replace(',', '.')); return isFinite(v) && v > 0 ? v : null; };
       const m = { date: $('#mDate').value || key(today()), weight: n('#mW'), waist: n('#mWa'), hip: n('#mHi'), thigh: n('#mTh'), arm: n('#mAr') };
@@ -3202,7 +3285,7 @@ ${(() => { const R = S.lettersRead || {}, ls = lettersOpen().filter(x => R[x.k])
         ${Store.status.snaps.length ? `<details class="snaps"><summary>Copias automáticas de este móvil (${Store.status.snaps.length})</summary><div id="snapList">${Store.status.snaps.map(d => `<div class="snap"><span>${nice(d)} ${d.slice(0, 4)}</span><button class="btn sm ghost" data-snap="${d}">Volver a esta</button></div>`).join('')}</div></details>` : ''}</div>
       <h2 class="sec">Empezar de cero</h2>
       <div class="card"><div class="inlineconfirm" id="rst"><button class="btn sm ghost" id="rst1">Borrar todos mis datos</button></div></div>
-      <p class="mono" style="text-align:center;margin-top:20px">SaraGym 5.0 · 21 nov 2026</p>
+      <p class="mono" style="text-align:center;margin-top:20px">SaraGym 5.1 · 21 nov 2026</p>
 
     </div>`;
   };
@@ -3548,7 +3631,7 @@ ${(() => { const R = S.lettersRead || {}, ls = lettersOpen().filter(x => R[x.k])
       checkHitos(); window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); return; }
     if (t.dataset.start) { const k = t.dataset.day; if (S.log[k] && progressOf(k).done) return; S.log[k] = { s: t.dataset.start, sets: {}, kg: {}, reps: {}, warm: {}, fin: false, done: false, extra: true }; save(); render(); window.scrollTo(0, 0); }
   });
-  window.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if ($('#sheet').classList.contains('on')) closeSheet(); else closeDrawer(); } });
+  window.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if ($('#lb') && $('#lb').classList.contains('on')) { closeLayer(); return; } if ($('#sheet').classList.contains('on')) closeSheet(); else closeDrawer(); } });
 
   function boot() {
     document.body.insertAdjacentHTML('afterbegin', `
