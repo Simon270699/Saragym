@@ -718,6 +718,11 @@ table.hist td:first-child, table.hist th:first-child { text-align: left; }
 .cmpv figure > div { aspect-ratio: 3 / 4; border-radius: 14px; overflow: hidden; background: var(--bg3); border: 1px solid var(--line2); } .cmpv img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .cmpv figcaption { text-align: center; font-size: 12.5px; } .cmpv figure:last-child > div { border-color: rgba(46,229,157,.5); box-shadow: 0 0 18px rgba(46,229,157,.2); }
 .cmpt { margin: 14px 16px 20px; width: calc(100% - 32px); } .cmpt td.chg { color: var(--good); font-weight: 800; }
+
+/* ===== v5.2: ejercicio registrado, copia opcional ===== */
+.exsaved { display: flex; gap: 8px; align-items: flex-start; margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; font-size: 13.5px; color: var(--ink); background: var(--good-soft); border: 1px solid rgba(46,229,157,.4); }
+.exsaved[hidden] { display: none; } .exsaved svg { width: 17px; height: 17px; flex: none; color: var(--good); margin-top: 1px; } .exsaved.pulse { animation: pop .4s cubic-bezier(.2,1.4,.3,1); }
+.card.nudge.bk { align-items: flex-start; } .card.nudge.bk .row2 { margin-top: 10px; } .card.nudge.bk .row2 .btn { flex: none; }
 </style>
 <main class="app"><div id="view"></div></main>
 <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
@@ -2891,8 +2896,8 @@ const Store = (() => {
   }
   function backupNudge() {
     const has = Object.keys(S.log).length + S.measures.filter(m => !m.src).length; if (has < 2) return '';
-    const days = S.lastBackup ? (Date.now() - S.lastBackup) / 864e5 : 99; if (days < 7) return '';
-    return `<div class="card nudge">${ic('save')}<div><b>Toca hacer tu copia semanal</b><span class="small muted">Un toque y la guardas en Notas por si cambias de móvil.</span></div><button class="btn sm dark" data-backup="1">Copiar</button></div>`;
+    const days = (Date.now() - Math.max(S.lastBackup || 0, S.bkSnooze || 0)) / 864e5; if (days < 30 || has < 6) return '';
+    return `<div class="card nudge bk">${ic('save')}<div><b>Todo está guardado en tu móvil</b><span class="small muted">No tienes que hacer nada. Solo si vas a cambiar de móvil conviene llevarte una copia.</span><span class="row2"><button class="btn sm dark" data-backup="1">Hacer copia</button><button class="btn sm ghost" data-bksnooze="1">Ahora no</button></span></div></div>`;
   }
   const macroBox = (t, g, c) => `<div class="macro"><span>${t}</span><b>${g}<small> g</small></b><i style="background:${c}"></i></div>`;
   const eatenCount = (k) => { const m = S.meals[k]; return m && m.eaten ? Object.values(m.eaten).filter(Boolean).length : 0; };
@@ -3279,13 +3284,13 @@ ${(() => { const R = S.lettersRead || {}, ls = lettersOpen().filter(x => R[x.k])
       <div class="card"><div id="saveInfo">${saveInfo()}</div>
         <div class="grid2" style="margin-top:12px"><button class="btn sm dark" id="bkCopy">Copiar mi copia</button><button class="btn sm ghost" id="sumCopy">Copiar resumen</button></div>
         <button class="btn sm ghost block" id="csvDl" style="margin-top:8px">Descargar todo mi historial (hoja de cálculo)</button>
-        <p class="small muted" style="margin:10px 0 0">«Copiar mi copia» guarda todo en un código: pégalo en Notas o envíatelo. «Copiar resumen» es un texto de tu semana para mandárselo a ${esc(S.settings.firma || 'Simon')}.</p>
+        <p class="small" style="margin:10px 0 0">Cada serie se guarda sola al marcarla, en dos sitios de este móvil a la vez, y cada día se hace una copia automática. La copia de abajo solo hace falta si cambias de móvil.</p><p class="small muted" style="margin:10px 0 0">«Copiar mi copia» guarda todo en un código: pégalo en Notas o envíatelo. «Copiar resumen» es un texto de tu semana para mandárselo a ${esc(S.settings.firma || 'Simon')}.</p>
         <div class="field" style="margin-top:12px"><label for="bk">Restaurar desde un código</label><textarea id="bk" spellcheck="false" placeholder="Pega aquí el código SG2…"></textarea></div>
         <button class="btn sm ghost" id="bkLoad" style="margin-top:8px">Restaurar</button><span class="mono" id="bkOk" style="display:block;margin-top:8px"></span>
         ${Store.status.snaps.length ? `<details class="snaps"><summary>Copias automáticas de este móvil (${Store.status.snaps.length})</summary><div id="snapList">${Store.status.snaps.map(d => `<div class="snap"><span>${nice(d)} ${d.slice(0, 4)}</span><button class="btn sm ghost" data-snap="${d}">Volver a esta</button></div>`).join('')}</div></details>` : ''}</div>
       <h2 class="sec">Empezar de cero</h2>
       <div class="card"><div class="inlineconfirm" id="rst"><button class="btn sm ghost" id="rst1">Borrar todos mis datos</button></div></div>
-      <p class="mono" style="text-align:center;margin-top:20px">SaraGym 5.1 · 21 nov 2026</p>
+      <p class="mono" style="text-align:center;margin-top:20px">SaraGym 5.2 · 21 nov 2026</p>
 
     </div>`;
   };
@@ -3435,6 +3440,7 @@ ${(() => { const R = S.lettersRead || {}, ls = lettersOpen().filter(x => R[x.k])
       ${L ? `<h2 class="sec">Tus series <span class="mono">${as ? 'kg ayuda' : 'kg'} · reps</span></h2>
         ${S.setup && S.setup[id] ? `<p class="mysetup">${ic('gear')}Tu ajuste: <b>${esc(S.setup[id])}</b></p>` : ''}${prev && !kg.some(x => x != null) ? `<button class="btn sm ghost block" id="same" style="margin-bottom:8px">${ic('rotate')}Rellenar como la última vez</button>` : ''}
         <div id="sets">${sl.map((st, i) => { const pw = prev && prev.sets[(sl[0].w ? i - 1 : i)]; const pwarm = st.w && prev && prev.warm && prev.warm.w; return `<div class="setrow ${st.w ? 'warm' : ''} ${done[i] ? 'on' : ''}" data-i="${i}"><span class="i">${st.w ? 'C' : (sl[0].w ? i : i + 1)}</span><span class="r"><b>${RL(st.reps)}</b><small>${done[i] && at[i] ? `Guardada ${hhmm(at[i])}` : st.w ? 'Calent. · 30"' : `Serie ${sl[0].w ? i : i + 1}${e.side ? ' · lado' : ''}`}</small></span><input type="text" inputmode="decimal" placeholder="${st.w ? (pwarm ? fmt(prev.warm.w, 1) : sg && !as ? fmt(roundTo(sg.kg * .5, stepOf(id)), 1) : 'kg') : (sg ? fmt(sg.kg, 1) : (pw && pw.w ? fmt(pw.w, 1) : 'kg'))}" value="${kg[i] != null ? String(kg[i]).replace('.', ',') : ''}" id="kg-${id}-${i}" class="kg" aria-label="Kilos serie ${i + 1}"><input type="text" inputmode="numeric" placeholder="${typeof st.reps === 'number' ? st.reps : 'reps'}" value="${rp[i] ?? ''}" id="rp-${id}-${i}" class="rp" aria-label="Repeticiones serie ${i + 1}"><button class="ok" aria-label="Marcar serie">${ic('check')}</button></div>`; }).join('')}</div>
+        <p class="exsaved" id="exSaved" ${sl.length && sl.every((x, j) => done[j]) ? '' : 'hidden'}>${ic('check')}<span>Ejercicio registrado${(() => { const tt = at.filter(Boolean); return tt.length ? ` a las ${hhmm(Math.max(...tt))}` : ''; })()}. Se guarda solo en tu móvil: no tienes que copiar nada.</span></p>
         ${Q[0] === 'Barra' ? `<div id="platesBox">${platesHTML(id, kg.find(x => x != null) || (sg && sg.kg) || 0)}</div>` : ''}
         <div class="effort"><span class="mono">¿Cómo ha ido?</span><div class="seg3" id="eff">${[['Me sobraba', 1], ['Justo', 2], ['Al límite', 3]].map(([t, v]) => `<button class="${(L.eff || {})[id] === v ? 'on' : ''}" data-eff="${v}">${t}</button>`).join('')}</div>
           <button class="painbtn ${(L.pain || {})[id] ? 'on' : ''}" id="pain">${ic('bolt')}<span>${(L.pain || {})[id] ? 'Molestia anotada' : 'He notado una molestia'}</span></button>
@@ -3520,6 +3526,7 @@ ${(() => { const R = S.lettersRead || {}, ls = lettersOpen().filter(x => R[x.k])
         if (a[i] && !st.w && kgA[i] == null) { for (let j = i - 1; j >= 0; j--) { if (!SL[j].w && a[j] && kgA[j] != null) { kgA[i] = kgA[j]; inp.value = String(kgA[j]).replace('.', ','); break; } } }
         const nx = SL.findIndex((x, j) => !a[j]), nxt = nx < 0 ? 'Era la última serie' : `Siguiente: ${SL[nx].w ? 'calentamiento' : `${num(kgA[nx]) ?? num(kgA[i]) ? fmt(num(kgA[nx]) ?? num(kgA[i]), 1) + ' kg × ' : ''}${RL(SL[nx].reps)}${typeof SL[nx].reps === 'number' ? ' reps' : ''}`}`;
         save(true); chip(true);
+        { const es = $('#exSaved'), all = SL.every((x, j) => a[j]); if (es) { es.hidden = !all; if (all) { es.querySelector('span').textContent = `Ejercicio registrado a las ${hhmm(Date.now())}. Se guarda solo en tu móvil: no tienes que copiar nada.`; es.classList.remove('pulse'); void es.offsetWidth; es.classList.add('pulse'); } } }
         if (a[i]) { startRest(st.w ? 30 : cur.e.rest, nxt); beatCheck(i); if (Math.random() < .25 && !(S.log[cur.k].cel || {})[cur.id]) love(); }
         else stopRest();
       };
@@ -3609,7 +3616,8 @@ ${(() => { const R = S.lettersRead || {}, ls = lettersOpen().filter(x => R[x.k])
 
   /* ---------- Eventos globales ---------- */
   document.addEventListener('click', (ev) => {
-    const t = ev.target.closest('[data-bdg],[data-letter],[data-pause],[data-ready],[data-short],[data-open],[data-warm],[data-fin],[data-finish],[data-recipe],[data-start],[data-backup],[data-undo],[data-install],[data-goalok]'); if (!t) return;
+    const t = ev.target.closest('[data-bksnooze],[data-bdg],[data-letter],[data-pause],[data-ready],[data-short],[data-open],[data-warm],[data-fin],[data-finish],[data-recipe],[data-start],[data-backup],[data-undo],[data-install],[data-goalok]'); if (!t) return;
+    if (t.dataset.bksnooze) { S.bkSnooze = Date.now(); save(); render(); return; }
     if (t.dataset.backup) { copyBackup(null); return; }
     if (t.dataset.bdg) { const b = badges().find(x => x.id === t.dataset.bdg); if (b) toast(b.next ? `Llevas ${fmt(b.v)} ${unitN(b.v, b.u)}. ${b.tier ? `Tienes ${TIERS[b.tier - 1].toLowerCase()}; el` : 'El'} siguiente nivel (${TIERS[b.tier].toLowerCase()}) llega a los ${fmt(b.next)}.` : `Diamante: ${fmt(b.v)} ${b.u}. No hay nivel más alto.`, b.n, b.ic); return; }
     if (t.dataset.letter) { if (t.dataset.letter === 'close') openLetter = null; else { openLetter = t.dataset.letter; (S.lettersRead = S.lettersRead || {})[openLetter] = Date.now(); save(true); confetti(.7); } render(); return; }
