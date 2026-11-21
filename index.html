@@ -630,6 +630,25 @@ table.hist td:first-child, table.hist th:first-child { text-align: left; }
 .hb2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .hb2 span { padding: 10px; border-radius: 12px; background: rgba(255,255,255,.04); border: 1px solid var(--line); font-size: 11.5px; color: var(--ink2); } .hb2 b { display: block; font-size: 22px; color: var(--ink); font-weight: 800; }
 .yheat { display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 1fr); gap: 3px; } .yheat i { aspect-ratio: 1 / 1; border-radius: 3px; background: rgba(255,255,255,.06); }
 .yheat i.p { background: rgba(255,45,70,.55); } .yheat i.d { background: var(--good); box-shadow: 0 0 5px rgba(46,229,157,.55); } .yheat i.f { background: transparent; border: 1px solid var(--line); }
+
+/* ===== v4.1: ficha con pestañas, rayos X, cartas ===== */
+.shtabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; margin-top: 14px; border-radius: 16px; background: rgba(255,255,255,.04); border: 1px solid var(--line2); position: sticky; top: 0; z-index: 5; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+.shtabs button { height: 40px; border-radius: 12px; font-weight: 700; font-size: 13.5px; color: var(--ink3); display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.shtabs button svg { width: 16px; height: 16px; }
+.shtabs button.on { background: linear-gradient(180deg, #2A2F3B, #1C2029); color: var(--ink); box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 0 0 1px rgba(255,45,70,.35); } .shtabs button.on svg { color: var(--red); }
+.tabp[hidden] { display: none; }
+.layers .ly-x.on { color: var(--orange); border-color: rgba(255,106,42,.55); background: rgba(255,106,42,.12); }
+.layers button { padding: 0 10px; } .layers #cmpBtn span { display: none; } @media (min-width: 400px) { .layers #cmpBtn span { display: inline; } }
+#gripLine { margin: 8px 0 0; color: var(--ink2); } #gripLine b { color: var(--good); }
+.eta { display: flex; gap: 8px; align-items: center; margin: 12px 2px 0; font-size: 13.5px; color: var(--ink2); } .eta svg { width: 15px; height: 15px; flex: none; color: var(--ink3); } .eta b { color: var(--ink); }
+.eta + .card.pre { margin-top: 10px; }
+.rest #restAdd { margin-left: auto; padding: 0 10px; background: transparent; border: 1px solid rgba(255,255,255,.18); color: rgba(255,255,255,.85); } .rest #restSkip { margin-left: 0; }
+.rest #restL { display: inline-block; max-width: 46vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+.monthline { margin: 10px 0 0; font-size: 14px; color: var(--ink2); } .monthline b { color: var(--ink); }
+.card.letter { display: grid; grid-template-columns: 44px minmax(0,1fr) 16px; gap: 12px; align-items: center; width: 100%; text-align: left; color: var(--ink); margin-top: 10px; background: linear-gradient(135deg, rgba(255,45,70,.22), rgba(255,106,42,.08)); border-color: rgba(255,45,70,.5); box-shadow: 0 0 26px rgba(255,45,70,.25); }
+.card.letter .li { width: 44px; height: 44px; border-radius: 14px; background: var(--red); display: grid; place-items: center; box-shadow: 0 0 16px rgba(255,45,70,.6); } .card.letter svg { width: 20px; height: 20px; } .card.letter > svg { width: 16px; height: 16px; color: var(--ink2); }
+.card.letter b { display: block; font-size: 15.5px; } .card.letter small { color: var(--ink2); font-size: 13px; }
+.card.letter.open { display: grid; grid-template-columns: 1fr; gap: 10px; } .card.letter.open p { margin: 0; font-size: 16px; line-height: 1.5; } .card.letter.open .btn { justify-self: start; }
 </style>
 <main class="app"><div id="view"></div></main>
 <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
@@ -678,6 +697,8 @@ table.hist td:first-child, table.hist th:first-child { text-align: left; }
   MAT.muscleBad = rimify(new T.MeshStandardMaterial({ color: 0xFF2038, roughness: .45, map: MAT.muscle.map, emissive: new T.Color(0xFF0022), emissiveIntensity: .75 }), 0xFFC0C8, 1.3, 1.8);
   const fxMat = (c, o, add) => new T.MeshBasicMaterial({ color: c, transparent: true, opacity: o, toneMapped: false, depthWrite: false, blending: add ? T.AdditiveBlending : T.NormalBlending });
   MAT.force = fxMat(0xC9A8FF, 1); MAT.force.depthTest = false; MAT.forceGlow = fxMat(0x8A5CFF, .34, true); MAT.forceGlow.depthTest = false;
+  MAT.cue = fxMat(0x7CFFC8, 1); MAT.cue.depthTest = false; MAT.cueGlow = fxMat(0x2EE59D, .36, true); MAT.cueGlow.depthTest = false; MAT.trailGhost = fxMat(0x2EE59D, .5);
+  const applyXray = (on) => { for (const m of [MAT.skin, MAT.top, MAT.tights]) { m.transparent = on; m.opacity = on ? .2 : 1; m.depthWrite = !on; m.needsUpdate = true; } };
   MAT.trailOk = fxMat(0x5CFFB9, .95); MAT.trailOkGlow = fxMat(0x2EE59D, .22, true);
   MAT.trailBad = fxMat(0xFF6A7D, .95); MAT.trailBadGlow = fxMat(0xFF2D46, .26, true);
   const cyl = (r1, r2, h, m, s = 18) => new T.Mesh(new T.CylinderGeometry(r1, r2, h, s), m);
@@ -1041,8 +1062,8 @@ table.hist td:first-child, table.hist th:first-child { text-align: left; }
     _riskTex = new T.CanvasTexture(c); _riskTex.encoding = T.sRGBEncoding; return _riskTex;
   }
   /* Flecha de fuerza: línea violeta con brillo y punta */
-  function mkArrow() {
-    const g = grp(), sh = cyl(.0055, .0055, 1, MAT.force, 8), gl = cyl(.024, .024, 1, MAT.forceGlow, 10), hd = new T.Mesh(new T.ConeGeometry(.03, .085, 16), MAT.force), hg = new T.Mesh(new T.ConeGeometry(.05, .12, 16), MAT.forceGlow);
+  function mkArrow(m = MAT.force, mg = MAT.forceGlow) {
+    const g = grp(), sh = cyl(.0055, .0055, 1, m, 8), gl = cyl(.024, .024, 1, mg, 10), hd = new T.Mesh(new T.ConeGeometry(.03, .085, 16), m), hg = new T.Mesh(new T.ConeGeometry(.05, .12, 16), mg);
     for (const o of [sh, gl, hd, hg]) { o.renderOrder = 8; g.add(o); } g.userData = { sh, gl, hd, hg }; return g;
   }
   function setArrow(g, a, b, headAt = 1) {
@@ -1075,16 +1096,16 @@ table.hist td:first-child, table.hist th:first-child { text-align: left; }
     if (!stage.layers.trail || (typeof EXI !== 'undefined' && EXI[ex.id] && /Cardio/.test(EXI[ex.id].m.join(' ')))) return;
     const E = stage.bad && ex.bad ? ex.bad : ex, J = stage.J, N = 64, F = stage.force;
     const C = { load: () => F && F.type === 'grav' ? F.pts[0]() : gripMid(J), lGrip: () => wp(J.lGrip), rGrip: () => wp(J.rGrip), lAn: () => wp(J.lAn), rAn: () => wp(J.rAn), head: () => wp(J.head), root: () => wp(J.root) };
-    const pts = {}; for (const k in C) pts[k] = [];
-    for (let f = 0; f <= N; f++) { poseKey(stage, poseAt(ex, f / N * E._cycle, stage.bad)); for (const k in C) pts[k].push(C[k]()); }
+    const sample = (bad) => { const cyc = (bad && ex.bad ? ex.bad : ex)._cycle, pts = {}; for (const k in C) pts[k] = []; for (let f = 0; f <= N; f++) { poseKey(stage, poseAt(ex, f / N * cyc, bad)); for (const k in C) pts[k].push(C[k]()); } return pts; };
     const len = (a) => a.reduce((s, p, i) => i ? s + p.distanceTo(a[i - 1]) : 0, 0);
+    const clean = (a) => { const o = []; a.forEach(p => { if (!o.length || p.distanceTo(o[o.length - 1]) > .012) o.push(p); }); return o; };
+    const tube = (a, r, m) => { const t = new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(a, false, 'centripetal'), 96, r, 6, false), m); t.renderOrder = 6; stage.fx.add(t); return t; };
+    const pts = sample(stage.bad);
     let best = null, bl = 0; for (const k in pts) { const l = len(pts[k]) * (k === 'load' ? 1.25 : k === 'root' || k === 'head' ? .8 : 1); if (l > bl) { bl = l; best = k; } }
     if (!best || bl < .3) return;
-    const clean = []; pts[best].forEach(p => { if (!clean.length || p.distanceTo(clean[clean.length - 1]) > .012) clean.push(p); });
-    if (clean.length < 3) return;
-    const curve = new T.CatmullRomCurve3(clean, false, 'centripetal');
-    const a = new T.Mesh(new T.TubeGeometry(curve, 96, .0065, 6, false), stage.bad ? MAT.trailBad : MAT.trailOk), b = new T.Mesh(new T.TubeGeometry(curve, 96, .024, 8, false), stage.bad ? MAT.trailBadGlow : MAT.trailOkGlow);
-    a.renderOrder = 6; b.renderOrder = 6; stage.fx.add(a, b); stage.trail = [a, b];
+    const main = clean(pts[best]); if (main.length < 3) return;
+    stage.trail = [tube(main, .0065, stage.bad ? MAT.trailBad : MAT.trailOk), tube(main, .024, stage.bad ? MAT.trailBadGlow : MAT.trailOkGlow)];
+    if (stage.bad && ex.bad) { const good = clean(sample(false)[best]); if (good.length >= 3) stage.trail.push(tube(good, .005, MAT.trailGhost)); }
   }
   const BG = 0x0C0E13;
   function makeStage(bg = BG) {
@@ -1103,8 +1124,9 @@ table.hist td:first-child, table.hist th:first-child { text-align: left; }
     const props = grp(); props.userData.attached = []; scene.add(props);
     const fx = grp(); scene.add(fx);
     const arrows = [mkArrow(), mkArrow()]; arrows.forEach(a => { a.visible = false; fx.add(a); });
+    const cues = [mkArrow(MAT.cue, MAT.cueGlow), mkArrow(MAT.cue, MAT.cueGlow)]; cues.forEach(a => { a.visible = false; fx.add(a); });
     const risk = [0, 1].map(() => { const sp = new T.Sprite(new T.SpriteMaterial({ map: riskTex(), transparent: true, depthTest: false, depthWrite: false, blending: T.AdditiveBlending, toneMapped: false })); sp.visible = false; sp.renderOrder = 9; fx.add(sp); return sp; });
-    return { scene, J, props, shadow: sh, ring, fx, arrows, risk, trail: null, layers: { trail: false, force: false }, glow: .45, eff: [] };
+    return { scene, J, props, shadow: sh, ring, fx, arrows, cues, risk, trail: null, layers: { trail: false, force: false, xray: false }, glow: .45, eff: [] };
   }
 
   function prepare(ex) {
@@ -1167,7 +1189,8 @@ table.hist td:first-child, table.hist th:first-child { text-align: left; }
     buildTrail(stage, ex);
     stage.riskAt = stage.bad && ex.bad && ex.bad.at ? ex.bad.at : null;
     poseKey(stage, poseAt(ex, 0, stage.bad));
-    stage.arrows.forEach(a => { a.visible = false; }); stage.risk.forEach(r => { r.visible = false; });
+    stage.arrows.forEach(a => { a.visible = false; }); stage.risk.forEach(r => { r.visible = false; }); stage.cues.forEach(a => { a.visible = false; });
+    stage.cueAt = stage.bad && ex.bad && ex.bad.arr ? ex.bad.arr : null;
   }
   function frame(stage, ex, time) {
     const p = poseAt(ex, time, stage.bad);
@@ -1191,6 +1214,10 @@ table.hist td:first-child, table.hist th:first-child { text-align: left; }
       if (F.type === 'cable') { setArrow(A[0], F.to(), F.a, .42 + .06 * Math.sin(time * 4)); A[1].visible = false; }
       else F.pts.forEach((f, i) => { const a = f(); a.y -= .07; setArrow(A[i], a, a.clone().add(V(0, -.3 - .03 * Math.sin(time * 4), 0))); if (F.pts.length === 1) A[1].visible = false; });
     } else { A[0].visible = false; A[1].visible = false; }
+    if (MAT.skin.transparent !== !!stage.layers.xray) applyXray(!!stage.layers.xray);
+    if (stage.cueAt) { const fd = stage.J.root.getWorldDirection(V()), yaw = Math.atan2(fd.x, fd.z), up = V(0, 1, 0), w = .5 + .5 * Math.sin(time * 5);
+      stage.cues.forEach((a, i) => { const c = stage.cueAt[i], j = c && stage.J[c[0]]; if (!j) { a.visible = false; return; } const p = j.getWorldPosition(V()), o1 = V(...c[1]).applyAxisAngle(up, yaw), o2 = V(...c[2]).applyAxisAngle(up, yaw); setArrow(a, p.clone().add(o1).addScaledVector(o2.clone().sub(o1), -.12 * w), p.clone().add(o2)); }); }
+    else stage.cues.forEach(a => { a.visible = false; });
     stage.risk.forEach((sp, i) => { const j = stage.riskAt && stage.riskAt[i] && stage.J[stage.riskAt[i]]; if (!j) { sp.visible = false; return; } sp.visible = true; j.getWorldPosition(sp.position); const k = .2 + .05 * Math.sin(time * 7 + i); sp.scale.set(k, k, k); });
   }
   function placeCam(cam, c, az) {
@@ -1230,17 +1257,19 @@ table.hist td:first-child, table.hist th:first-child { text-align: left; }
     resize() { const w = this.c.clientWidth, h = this.c.clientHeight; if (!w || !h) return; this.r.setSize(w, h); this.cam.aspect = w / h; this.cam.setViewOffset(w, h, 0, -h * .045, w, h); this.cam.updateProjectionMatrix(); } // baja un poco el encuadre para que la etiqueta de material no tape la cabeza
     base() { return { ...CAM0, ...(this.ex.cam || {}) }; }
     show(ex, opts = {}) {
-      this.ex = prepare(ex); this.bad = !!opts.bad; this.t = 0; this.layers = this.layers || { trail: true, force: true }; setup(this.st, ex, { bad: this.bad, layers: this.layers });
+      this.ex = prepare(ex); this.bad = !!opts.bad; this.t = 0; this.layers = this.layers || { trail: true, force: true, xray: false }; setup(this.st, ex, { bad: this.bad, layers: this.layers });
       const b = this.base(); this.mode = opts.mode || this.mode || 'q34';
       this.goal = this.target(this.mode, b); if (this.mode === 'hands') this.aimHands(); this.cur = { ...this.goal }; this.zoom = 1; this.resize(); this.active = true; this.start();
     }
     setBad(v) { this.bad = v; setup(this.st, this.ex, { bad: v, layers: this.layers }); }
     setLayer(k, v) { this.layers[k] = !!v; setup(this.st, this.ex, { bad: this.bad, layers: this.layers }); }
     hasForce() { return !!this.st.force; }
+    gripInfo() { const J = this.st.J; poseKey(this.st, poseAt(this.ex, 0, false)); const w = wp(J.lGrip).distanceTo(wp(J.rGrip)), sh = wp(J.lSh).distanceTo(wp(J.rSh)); return { w, sh, ratio: sh ? w / sh : 0 }; }
     hasTrail() { const was = this.layers.trail; if (was) return !!this.st.trail; this.st.layers.trail = true; buildTrail(this.st, this.ex); const ok = !!this.st.trail; this.st.layers.trail = false; buildTrail(this.st, this.ex); return ok; }
     breath() { return this.st.effort == null ? null : (this.st.effort ? 'out' : 'in'); }
     target(mode, b = this.base()) {
       if (mode === 'hands' || mode === 'far') return { ...b, el: mode === 'far' ? 16 : 10, az: this.cur ? this.cur.az : b.az, d: mode === 'far' ? b.d * 1.45 : 1.3, follow: mode === 'hands' };
+      if (mode === 'feet') return { ...b, el: 40, az: 24, d: 2.5, follow: true, feet: true };
       const v = VIEWS[mode]; if (!v) return { ...b };
       return { ...b, az: v.az + (mode === 'q34' ? (b.az > 45 ? b.az - 38 : 0) : 0), el: v.el };
     }
@@ -1281,7 +1310,7 @@ table.hist td:first-child, table.hist th:first-child { text-align: left; }
       if (this.playing) this.t += dt * this.speed;
       frame(this.st, this.ex, this.t);
       const g = this.goal, c = this.cur, k = 1 - Math.pow(.0015, dt);
-      if (g.follow) { const J = this.st.J, p = g.hand ? J[g.hand + 'Grip'].getWorldPosition(V()) : J.lGrip.getWorldPosition(V()).add(J.rGrip.getWorldPosition(V())).multiplyScalar(.5); g.tx = p.x; g.ty = p.y; g.tz = p.z; }
+      if (g.follow) { const J = this.st.J, p = g.feet ? J.lAn.getWorldPosition(V()).add(J.rAn.getWorldPosition(V())).multiplyScalar(.5).add(V(0, .16, 0)) : g.hand ? J[g.hand + 'Grip'].getWorldPosition(V()) : J.lGrip.getWorldPosition(V()).add(J.rGrip.getWorldPosition(V())).multiplyScalar(.5); g.tx = p.x; g.ty = p.y; g.tz = p.z; }
       else { const b = this.base(); g.tx = b.tx || 0; g.ty = b.ty; g.tz = b.tz || 0; }
       let daz = ((g.az - c.az + 540) % 360) - 180;
       c.az += daz * k; c.el += (g.el - c.el) * k; c.d += (g.d * this.zoom * (g.follow ? 1 : 1.08) - c.d) * k;
@@ -1707,6 +1736,10 @@ table.hist td:first-child, table.hist th:first-child { text-align: left; }
     hipThrustMachine: [['calves', 'quads'], ['lBall', 'rBall']], lyingCurl: [['erect'], ['root']], pullThrough: [['erect'], ['spine2']], hackSquat: [['calves'], ['lAn', 'rAn']], staticLunge: [['erect'], ['spine1']],
     gobletHeels: [['deltA', 'erect'], ['lSh', 'rSh']], ohp: [['erect'], ['spine1']], latRaise: [['traps'], ['lSh', 'rSh']], uprightRow: [['traps'], ['lSh', 'rSh']], ropePushdown: [['deltA', 'lats'], ['lSh', 'rSh']], dbRow: [['obliques', 'erect'], ['spine2']], ezCurl: [['erect', 'deltA'], ['spine1']] };
   Object.keys(BADX).forEach(k => { if (X[k] && X[k].bad) { X[k].bad.m = BADX[k][0]; X[k].bad.at = BADX[k][1]; } });
+  /* Flechas verdes de corrección en el error: [articulación, desde, hasta] respecto a ella */
+  const SHD = [['lSh', [.02, .3, 0], [0, .09, 0]], ['rSh', [-.02, .3, 0], [0, .09, 0]]], KNO = [['lKn', [.07, 0, .03], [.27, 0, .03]], ['rKn', [-.07, 0, .03], [-.27, 0, .03]]], HEEL = [['lAn', [0, .24, -.02], [0, .05, -.02]], ['rAn', [0, .24, -.02], [0, .05, -.02]]];
+  const ARRX = { latRaise: SHD, uprightRow: SHD, ropePushdown: SHD, boxSquat: KNO, lungeBack: KNO, hackSquat: HEEL, hipThrustMachine: HEEL };
+  Object.keys(ARRX).forEach(k => { if (X[k] && X[k].bad) X[k].bad.arr = ARRX[k]; });
   /* Qué tramo es el esfuerzo cuando no se deduce de la carga */
   Object.assign(X.lyingCurl, { eff: '-leg' }); Object.assign(X.seatedCurl, { eff: '-leg' }); Object.assign(X.seatedCurlUni, { eff: '-leg' }); Object.assign(X.standingCurl, { eff: '-leg' });
   Object.assign(X.legPress, { eff: 'leg' }); Object.assign(X.calfPress, { eff: 'leg' }); Object.assign(X.machineRow, { eff: '-grip' }); Object.assign(X.backExt, { eff: [1, 0] });
@@ -2484,7 +2517,7 @@ const Store = (() => {
     }
   }
   const MOOD = { hard: ['Esa serie ha sido de valientes. Orgulloso de ti.', 'Al límite y la has sacado. Eso es lo que te hace más fuerte.', 'Lo difícil ya está hecho. Respira, que vas genial.'],
-    back: ['Volver es lo más difícil y ya lo has hecho.', 'Qué alegría verte otra vez por aquí.'], low: ['Hoy vale con venir. Mañana será otro día.', 'Los días flojos también cuentan. Y mucho.'] };
+    back: ['Volver es lo más difícil y ya lo has hecho.', 'Qué alegría verte otra vez por aquí.'], pride: ['Venías floja y lo has terminado. Eso vale doble.', 'Hoy costaba y aun así has venido. Estoy muy orgulloso.'], low: ['Hoy vale con venir. Mañana será otro día.', 'Los días flojos también cuentan. Y mucho.'] };
   function love(force, mood) {
     if (mood && MOOD[mood]) { if (!S.settings.msgs) return; lastMsg = Date.now(); const a = MOOD[mood]; toast(a[Math.floor(Math.random() * a.length)]); return; }
     if (!S.settings.msgs && !force) return; const now = Date.now(); if (!force && now - lastMsg < 80000) return; lastMsg = now;
@@ -2626,6 +2659,21 @@ const Store = (() => {
     return rows.length ? `<div class="mbars">${rows.map(([id, v]) => `<div><span>${MUSN[id] || id}</span><div class="bar"><i style="width:${v / mx * 100}%"></i></div><b class="num">${fmt(Math.round(v))}</b></div>`).join('')}</div>` : '';
   }
   const weekKeys = (off = 0) => { const m = addD(monday(today()), off * 7); return Array.from({ length: 7 }, (_, i) => key(addD(m, i))); };
+  /* Cartas de Simon: se escriben en su móvil, viajan en un código y se abren al cumplir sesiones o al llegar una fecha */
+  const LETK = [['n25', 25], ['n50', 50], ['n100', 100]];
+  const b64e = (o) => btoa(unescape(encodeURIComponent(JSON.stringify(o)))), b64d = (t) => JSON.parse(decodeURIComponent(escape(atob(t))));
+  function lettersOpen() {
+    const Lt = S.letters || {}, n = Object.values(S.log).filter(x => x.done).length, out = [];
+    LETK.forEach(([k, need]) => { if (Lt[k] && n >= need) out.push({ k, t: Lt[k], h: `Por tus ${need} entrenos` }); });
+    if (Lt.dText && Lt.dDate && key(today()) >= Lt.dDate) out.push({ k: 'd', t: Lt.dText, h: `Para el ${nice(Lt.dDate)}` });
+    return out;
+  }
+  let openLetter = null;
+  function letterCard() {
+    const R = S.lettersRead || {}, firma = esc(S.settings.firma || 'Simon'), o = lettersOpen().find(x => !R[x.k] || openLetter === x.k); if (!o) return '';
+    return openLetter === o.k ? `<div class="card letter open"><span class="mono">${o.h} · de ${firma}</span><p>${esc(o.t).replace(/\n/g, '<br>')}</p><button class="btn sm" data-letter="close">Guardarla en mis logros</button></div>`
+      : `<button class="card letter" data-letter="${o.k}"><span class="li">${ic('heart')}</span><span><b>Tienes una carta de ${firma}</b><small>${o.h}. Toca para abrirla.</small></span>${ic('chev')}</button>`;
+  }
   const VIEWS = {};
   VIEWS.inicio = () => {
     const t = today(), k = key(t), sid = sessionFor(t), s = sid && SESSIONS[sid], ws = weekStats(), N = nutrition(), p = S.profile, g = GOALS[p.goal];
@@ -2649,7 +2697,7 @@ const Store = (() => {
         <div class="timer"><b class="num">${fmt(kcalOf(k))}</b><span>KCAL HOY</span></div>
       </section>
       <div class="week" aria-label="Semana">${week}</div>
-      ${streakCard()}${rescueCard()}
+      ${letterCard()}${streakCard()}${rescueCard()}
       ${S.goalCard ? `<div class="card glass profile"><span class="mono">Tu perfil</span><div class="pf num"><span><b>31</b>años</span><span><b>${fmt(curWeight(), 1)}</b>kg</span><span><b>1,52</b>m</span><span><b>${S.days.length}</b>días/sem</span></div><p class="small muted">Objetivo: <b style="color:var(--ink)">${GOALS[S.profile.goal].t}</b>. Ya está todo guardado: no tienes que volver a ponerlo.</p><div class="row2"><a class="btn sm ghost" href="#ajustes">Cambiar objetivo</a><button class="btn sm" data-goalok="1">Perfecto</button></div></div>` : ''}
       ${s && !(S.log[k] && S.log[k].done) ? beatCard(sid, k) : ''}
       ${installCard()}
@@ -2728,7 +2776,9 @@ const Store = (() => {
       <div class="blockhead"><h3>Calentamiento</h3><span class="mono">6 min</span></div>
       ${WARMUP.map(w => `<button class="checkrow ${L && L.warm[w.k] ? 'on' : ''}" data-warm="${w.k}" data-sid="${sid}" data-key="${k}"><span class="box">${ic('check')}</span><span><b>${w.t}</b><small>${w.k === 'mov' ? (lowerDay ? MOBILITY.low : MOBILITY.up).slice(0, 3).join(' · ') : 'Ritmo alto para subir pulsaciones'}</small></span><span class="mono">${w.d}</span></button>`).join('')}`;
     const plan = dayPlan(sid, L), full = exList(sid).length, started = !!(L && pr.done);
-    if (!(L && L.done)) html += `<div class="card glass pre"><div class="prer"><span class="mono">¿Cómo vienes hoy?</span><div class="seg3" id="ready">${[['Floja', 1], ['Normal', 2], ['Con ganas', 3]].map(([t, v]) => `<button class="${L && L.ready === v ? 'on' : ''}" data-ready="${v}" data-sid="${sid}" data-key="${k}">${t}</button>`).join('')}</div></div>
+    const leftMin = Math.round(plan.reduce((a, e) => a + setList(e).reduce((b, st, i) => b + (((L && L.sets[e.id]) || [])[i] ? 0 : ((e.side ? 80 : 40) + st.rest) / 60), 0), 0) + (WARMUP.every(w => L && L.warm[w.k]) ? 0 : 6) + (L && L.fin ? 0 : (FINISH[s.end].min || 0)));
+    const endAt = new Date(Date.now() + leftMin * 60000);
+    if (!(L && L.done)) html += `<p class="eta">${ic('rotate')}<span>${started ? 'Te quedan unos' : 'Unos'} <b>${leftMin} min</b>${isToday ? ` · si ${started ? 'sigues' : 'empiezas'} ahora, acabas hacia las <b>${endAt.getHours()}:${pad(endAt.getMinutes())}</b>` : ''}</span></p><div class="card glass pre"><div class="prer"><span class="mono">¿Cómo vienes hoy?</span><div class="seg3" id="ready">${[['Floja', 1], ['Normal', 2], ['Con ganas', 3]].map(([t, v]) => `<button class="${L && L.ready === v ? 'on' : ''}" data-ready="${v}" data-sid="${sid}" data-key="${k}">${t}</button>`).join('')}</div></div>
       ${L && L.ready === 1 ? `<p class="small muted" style="margin:8px 0 0">Hoy bajo los pesos un 10 %. Lo importante es venir.${S.settings.why ? ` Recuerda por qué empezaste: <b style="color:var(--ink)">«${esc(S.settings.why)}»</b>.` : ''}</p>` : ''}
       <button class="prer short ${L && L.short ? 'on' : ''}" data-short="1" data-sid="${sid}" data-key="${k}"><span>${ic('bolt')}<b>Voy con prisa</b><small>${L && L.short ? `Sesión corta: ${plan.length} ejercicios, lo esencial` : `Deja solo lo esencial (unos ${Math.round(full * .5 * 7)} min menos)`}</small></span><i class="sw"></i></button></div>`;
     s.groups.forEach(g => { if (!plan.some(x => x.g === g.g)) return;
@@ -2801,7 +2851,7 @@ const Store = (() => {
       <div class="card glass cal"><div class="calh"><button class="iconbtn" data-calm="-1" aria-label="Mes anterior">${ic('back')}</button><b>${MNL[mo]} ${y}</b><button class="iconbtn" data-calm="1" aria-label="Mes siguiente">${ic('chev')}</button></div>
         <div class="calw">${DS.map(x => `<span>${x}</span>`).join('')}</div><div class="calg">${cells}</div>
         <div class="calleg"><span><i class="done"></i>Terminado</span><span><i class="part"></i>Empezado</span><span><i class="plan"></i>Toca</span><span><i class="miss"></i>Pendiente</span></div>
-        <div class="calsum num"><span><b>${nDone}</b> entrenos</span><span><b>${nSets}</b> series este mes</span></div></div>
+        <div class="calsum num"><span><b>${nDone}</b> entrenos</span><span><b>${nSets}</b> series este mes</span></div>${(() => { const ym = `${y}-${pad(mo + 1)}`, prs = hitos().list.filter(x => x.kind === 'pr' && x.date.slice(0, 7) === ym).length, per = {}; for (const kk in S.log) if (S.log[kk].done) per[kk.slice(0, 7)] = (per[kk.slice(0, 7)] || 0) + 1; const bestM = nDone && Object.keys(per).length > 1 && nDone >= Math.max(...Object.values(per)); return nDone ? `<p class="monthline">${MNL[mo]}: <b>${nDone} ${nDone === 1 ? 'entreno' : 'entrenos'}</b>${prs ? ` y <b>${prs} ${prs === 1 ? 'récord' : 'récords'}</b>` : ''}${bestM ? '. Tu mejor mes hasta ahora.' : '.'}</p>` : ''; })()}</div>
       <div id="calDay">${dayDetail(calSel)}</div>
       <h2 class="sec">Tu año <span class="mono">${(() => { let n = 0; for (const kk in S.log) if (kk.slice(0, 4) === String(t.getFullYear()) && S.log[kk].done) n++; return n; })()} entrenos</span></h2>
       <div class="card glass"><div class="yheat">${(() => { const m0 = addD(monday(t), -7 * 25); let h = ''; for (let i = 0; i < 26 * 7; i++) { const d = addD(m0, i), kk = key(d), L = S.log[kk], pr = L ? progressOf(kk) : { done: 0 }; h += `<i class="${kk > key(t) ? 'f' : L && L.done ? 'd' : pr.done ? 'p' : ''}" title="${nice(kk)}"></i>`; } return h; })()}</div><p class="small muted" style="margin:10px 0 0">Las últimas 26 semanas. Cada cuadro es un día; cuanto más verde, más constante.</p></div></div>`;
@@ -2976,6 +3026,7 @@ const Store = (() => {
       <div class="tiles" style="margin-top:12px"><div class="tile"><span class="mono">Entrenos</span><b>${h.nw}</b></div><div class="tile"><span class="mono">Series</span><b>${fmt(h.sets)}</b></div><div class="tile"><span class="mono">Levantado</span><b>${fmt(h.ton / 1000, 1)}<small>t</small></b></div><div class="tile"><span class="mono">Semanas completas</span><b>${h.weeks}</b></div></div>
       <h2 class="sec">Recompensas <span class="mono">${rs.got.length}/${rs.R.length}</span></h2>
       <div class="rewards">${rs.R.map(r => `<div class="rw ${r.open ? 'open' : ''}"><span class="ri">${ic(r.open ? 'gift' : 'lock')}</span><div><b>${r.open ? (r.t ? esc(r.t) : 'Sorpresa desbloqueada') : (r.t && r.open ? esc(r.t) : 'Recompensa sorpresa')}</b><span class="small muted">${r.open ? `Pídesela a ${esc(S.settings.firma || 'Simon')}` : `Se abre a los ${fmt(r.pts)} puntos · faltan ${fmt(r.pts - h.points)}`}</span></div><span class="mono num">${fmt(r.pts)}</span></div>`).join('')}</div>
+${(() => { const R = S.lettersRead || {}, ls = lettersOpen().filter(x => R[x.k]); return ls.length ? `<h2 class="sec">Cartas de ${esc(S.settings.firma || 'Simon')} <span class="mono">${ls.length}</span></h2><div class="stack">${ls.map(o => `<div class="card letter open"><span class="mono">${o.h}</span><p>${esc(o.t).replace(/\n/g, '<br>')}</p></div>`).join('')}</div>` : ''; })()}
       <h2 class="sec">Récords personales <span class="mono">kg</span></h2>
       ${prs.length ? `<div class="card white" style="padding:4px 14px">${prs.map(([id, kg]) => `<div class="ing"><span>${esc(EXI[id].n)}</span><b>${fmt(kg, 1)} kg</b></div>`).join('')}</div>` : '<div class="empty small">Cuando apuntes los kilos de tus series, aquí aparecerá tu mejor marca en cada ejercicio.</div>'}
       <h2 class="sec">Hitos <span class="mono">${h.list.length}</span></h2>
@@ -3009,6 +3060,13 @@ const Store = (() => {
       <h2 class="sec">Recompensas</h2>
       <details class="card simon"><summary>Solo para ${esc(S.settings.firma || 'Simon')}: escribir los regalos</summary><p class="small muted" style="margin:10px 0">Escribe qué regalo hay en cada nivel de puntos. Sara no lo ve hasta que lo desbloquea; mientras tanto le sale «Recompensa sorpresa».</p>
         <div class="stack" id="rwEdit">${S.rewards.map((r, i) => `<div class="field"><label for="rw${i}">${fmt(r.pts)} puntos</label><input id="rw${i}" data-rw="${i}" value="${esc(r.t || '')}" placeholder="Ej.: cena en tu sitio favorito"></div>`).join('')}</div></details>
+      <details class="card simon" style="margin-top:10px"><summary>Solo para ${esc(S.settings.firma || 'Simon')}: cartas que se abren solas</summary>
+        ${S.lettersLocked ? `<p class="small muted" style="margin:10px 0 0">Hay cartas guardadas esperando su momento. No se pueden leer antes de tiempo.</p>` : `<p class="small muted" style="margin:10px 0">Escríbelas en tu propio móvil (abre este mismo enlace), pulsa «Crear código» y envíaselo. Ella lo pega abajo y no puede leerlas hasta que toque.</p>
+        <div class="stack">${LETK.map(([k, n]) => `<div class="field"><label for="lt_${k}">Al llegar a ${n} entrenos</label><textarea id="lt_${k}" class="plain" data-lt="${k}" placeholder="Lo que quieres decirle ese día">${esc((S.letters || {})[k] || '')}</textarea></div>`).join('')}
+          <div class="field"><label for="lt_date">En una fecha especial</label><input id="lt_date" type="date" data-lt="dDate" value="${esc((S.letters || {}).dDate || '')}"></div><div class="field"><label for="lt_dText">Mensaje de ese día</label><textarea id="lt_dText" class="plain" data-lt="dText" placeholder="Cumpleaños, aniversario…">${esc((S.letters || {}).dText || '')}</textarea></div>
+          <button class="btn sm dark" id="ltMake">Crear código para enviárselo</button></div>`}
+        <div class="field" style="margin-top:12px"><label for="ltCode">Tengo un código de ${esc(S.settings.firma || 'Simon')}</label><textarea id="ltCode" spellcheck="false" placeholder="Pega aquí el código SGL…"></textarea></div>
+        <button class="btn sm ghost" id="ltLoad" style="margin-top:8px">Guardar sus cartas</button><span class="mono" id="ltOk" style="display:block;margin-top:8px"></span></details>
       <h2 class="sec">Mi porqué</h2>
       <div class="card"><div class="field"><label for="sWhy">¿Por qué empezaste? (te lo recordaré los días flojos)</label><input id="sWhy" value="${esc(S.settings.why || '')}" placeholder="Ej.: sentirme fuerte y con energía"></div></div>
       <h2 class="sec">En el gimnasio</h2>
@@ -3027,6 +3085,7 @@ const Store = (() => {
         ${Store.status.snaps.length ? `<details class="snaps"><summary>Copias automáticas de este móvil (${Store.status.snaps.length})</summary><div id="snapList">${Store.status.snaps.map(d => `<div class="snap"><span>${nice(d)} ${d.slice(0, 4)}</span><button class="btn sm ghost" data-snap="${d}">Volver a esta</button></div>`).join('')}</div></details>` : ''}</div>
       <h2 class="sec">Empezar de cero</h2>
       <div class="card"><div class="inlineconfirm" id="rst"><button class="btn sm ghost" id="rst1">Borrar todos mis datos</button></div></div>
+      <p class="mono" style="text-align:center;margin-top:20px">SaraGym 4.1 · 21 nov 2026</p>
 
     </div>`;
   };
@@ -3066,6 +3125,9 @@ const Store = (() => {
     $$('[data-snap]').forEach(b => b.onclick = async () => { if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = '¿Seguro? Toca otra vez'; return; } const o = await Store.snapshot(b.dataset.snap); if (o) { restoreFrom(o); toast('Has vuelto a la copia del ' + nice(b.dataset.snap), 'SaraGym', 'save'); } });
     $$('#kMode button').forEach(b => b.onclick = () => { S.settings.kcalMode = b.dataset.m; save(); render(); });
     const kT = $('#kT'), kR = $('#kR'); if (kT) [kT, kR].forEach(x => x.onchange = () => { S.settings.kcalTrain = num(kT.value); S.settings.kcalRest = num(kR.value); save(); });
+    $$('[data-lt]').forEach(x => x.oninput = () => { S.letters = S.letters || {}; S.letters[x.dataset.lt] = x.value; save(); });
+    const lm = $('#ltMake'); if (lm) lm.onclick = () => copyText('SGL1.' + b64e({ l: S.letters || {}, r: S.rewards.map(r => r.t || '') }), $('#ltOk'), 'Código copiado. Envíaselo por WhatsApp.');
+    const ll = $('#ltLoad'); if (ll) ll.onclick = () => { const raw = $('#ltCode').value.trim(), out = $('#ltOk'); try { if (!raw.startsWith('SGL1.')) throw 0; const o = b64d(raw.slice(5)); S.letters = { ...(S.letters || {}) }; Object.entries(o.l || {}).forEach(([k2, v]) => { if (v) S.letters[k2] = v; }); (o.r || []).forEach((t2, i) => { if (t2 && S.rewards[i]) S.rewards[i].t = t2; }); S.lettersLocked = true; save(true); out.textContent = 'Guardado. Se abrirán cuando llegue su momento.'; setTimeout(render, 1500); } catch (err) { out.textContent = 'Ese código no es válido. Cópialo entero, empieza por SGL1.'; } };
     const sw = $('#sWhy'); if (sw) sw.oninput = () => { S.settings.why = sw.value.trim(); save(); };
     const tg = (id, key2) => { const b = $(id); if (b) b.onclick = () => { S.settings[key2] = S.settings[key2] === false; b.classList.toggle('on', S.settings[key2] !== false); save(); }; }; tg('#sAw', 'awake'); tg('#sBp', 'beep');
     const cd = $('#csvDl'); if (cd) cd.onclick = () => { const rows = [['Fecha', 'Sesión', 'Ejercicio', 'Serie', 'Kg', 'Reps', 'Hora', 'Esfuerzo', 'Molestia']];
@@ -3156,14 +3218,16 @@ const Store = (() => {
         <span class="hint">Arrastra para girar · pellizca para acercar</span>
       </div><div class="stage cmp" id="cmp" hidden><video id="cmpV" playsinline muted loop controls></video><button class="iconbtn" id="cmpX" aria-label="Quitar mi vídeo">${ic('x')}</button><span class="mono">Tú</span></div></div>
       <div class="deck">
-        <div class="views" id="views">${VIEWBTN.map(([m, t]) => `<button data-vw="${m}" class="${m === 'q34' ? 'on' : ''}">${t}</button>`).join('')}</div>
+        <div class="views" id="views">${VIEWBTN.concat(['glute', 'gluteMed', 'quads', 'hams', 'adductors', 'calves'].includes(mainMus(id)) ? [['feet', 'Pies']] : []).map(([m, t]) => `<button data-vw="${m}" class="${m === 'q34' ? 'on' : ''}">${t}</button>`).join('')}</div>
         <div class="ctl"><button id="pp" aria-label="Pausa">${ic('pause')}</button><button data-sp=".5">0,5×</button><button data-sp="1" class="on">1×</button>${ex3 && ex3.bad ? `<span class="sp"></span><div class="tg" id="tg"><button class="on" data-bad="0">${ic('check')}Correcto</button><button data-bad="1">${ic('x')}Error</button></div>` : ''}</div>
-        <div class="layers"><button data-ly="trail" class="ly-t">${ic('route')}Recorrido</button><button data-ly="force" class="ly-f">${ic('down')}Fuerza</button><span class="sp"></span><button id="cmpBtn">${ic('cam')}Compárate</button><input type="file" id="cmpIn" accept="video/*" capture="environment" hidden></div>
+        <div class="layers"><button data-ly="trail" class="ly-t">${ic('route')}Recorrido</button><button data-ly="force" class="ly-f">${ic('down')}Fuerza</button><button data-ly="xray" class="ly-x">${ic('muscle')}Rayos X</button><span class="sp"></span><button id="cmpBtn" aria-label="Compárate en vídeo">${ic('cam')}<span>Compárate</span></button><input type="file" id="cmpIn" accept="video/*" capture="environment" hidden></div>
       </div>
       <h1 class="exname">${esc(X.n)}</h1>
       <div class="keycue"><span class="mono">La clave</span><b>${esc(KEY[id] || X.c[0])}</b></div>
       <div class="chips">${X.m.map((m, i) => `<span class="chip ${i ? '' : 'hot'}">${m}</span>`).join('')}${e && e.tempo ? `<span class="chip red">${e.tempo}</span>` : ''}</div>
       <p class="feelline">Nótalo en <b>${esc(X.m[0].toLowerCase())}</b>${noFeel(X.m) ? ` · no en <em>${esc(noFeel(X.m))}</em>` : ''}</p>
+      <div class="shtabs" id="shtabs"><button data-tab="do">${ic('dumb')}Hacer</button><button data-tab="learn">${ic('bulb')}Aprender</button><button data-tab="hist">${ic('chart')}Historial</button></div>
+      <div class="tabp" data-p="do">${!e ? `<p class="small muted" style="margin-top:12px">Este ejercicio no está en tu plan de ahora. Puedes verlo en Aprender o usarlo como cambio cuando una máquina esté ocupada.</p>` : ''}
       ${e ? `<div class="target"><button data-g="series"><b>${e.reps.length}</b><span>series</span></button><button data-g="${reps === 'Máx' ? 'max' : 'reps'}"><b>${reps}</b><span>${e.side ? 'reps x lado' : 'reps'}</span></button><button data-g="descanso"><b>${restTxt(e.rest)}</b><span>descanso</span></button><button data-g="RIR"><b>${e.rir != null ? e.rir : '—'}</b><span>RIR</span></button></div>` : ''}
       ${nt && nt.t ? `<div class="note pin">${ic('pin')}<span><b>Tu nota del ${nice(nt.d)}:</b> ${esc(nt.t)}</span></div>` : ''}
       ${L && prev ? `<div class="last"><div><span class="mono">La última vez · ${nice(prev.k)}</span><b class="num">${prev.warm && prev.warm.w ? `C ${fmt(prev.warm.w, 1)} · ` : ''}${setsTxt(prev)}</b></div><div class="sug ${sg.up ? 'up' : ''}"><span class="mono">Hoy</span><b class="num">${fmt(sg.kg, 1)} kg</b><small>${esc(sg.tag)}</small></div></div>
@@ -3174,15 +3238,18 @@ const Store = (() => {
         ${Q[0] === 'Barra' ? `<div id="platesBox">${platesHTML(id, kg.find(x => x != null) || (sg && sg.kg) || 0)}</div>` : ''}
         <div class="effort"><span class="mono">¿Cómo ha ido?</span><div class="seg3" id="eff">${[['Me sobraba', 1], ['Justo', 2], ['Al límite', 3]].map(([t, v]) => `<button class="${(L.eff || {})[id] === v ? 'on' : ''}" data-eff="${v}">${t}</button>`).join('')}</div>
           <button class="painbtn ${(L.pain || {})[id] ? 'on' : ''}" id="pain">${ic('bolt')}<span>${(L.pain || {})[id] ? 'Molestia anotada' : 'He notado una molestia'}</span></button>
-          <p class="small muted" id="painTip" ${(L.pain || {})[id] ? '' : 'hidden'}>Agujetas: dolor sordo en el músculo, uno o dos días después. Molestia a vigilar: pinchazo, en la articulación o que va a más. La próxima vez no subo el peso. Si se repite, enséñaselo a tu entrenador o a un fisio.</p></div>
+          ${(() => { const n = Object.values(S.log).filter(x => (x.pain || {})[id]).length; return n >= 2 ? `<p class="small" style="color:var(--warn);margin:0">Has marcado molestia en este ejercicio ${n} veces. Coméntaselo a tu entrenador antes de seguir subiendo.</p>` : ''; })()}<p class="small muted" id="painTip" ${(L.pain || {})[id] ? '' : 'hidden'}>Agujetas: dolor sordo en el músculo, uno o dos días después. Molestia a vigilar: pinchazo, en la articulación o que va a más. La próxima vez no subo el peso. Si se repite, enséñaselo a tu entrenador o a un fisio.</p></div>
         <details class="swapex"><summary>${ic('swap')}¿Máquina ocupada? Cámbialo por hoy</summary><div class="stack" id="alts"></div></details>
         <p class="small muted" style="margin:8px 2px 0">Cada serie que marcas se guarda con su fecha y su hora en el calendario. Si no escribes las reps, cuento las del plan.</p>
         <div class="field" style="margin-top:16px"><label for="exnote">Nota para la próxima vez</label><textarea id="exnote" class="plain" placeholder="Ej.: asiento en el 4, subir peso, cuidado con el hombro…">${esc(nt ? nt.t : '')}</textarea></div>` : (e ? `<p class="small muted" style="margin-top:12px">Así aparece en tu plan. Para apuntar series, ábrelo desde el día que toca.</p>` : '')}
+      </div><div class="tabp" data-p="hist" hidden>
       <h2 class="sec">Tu historial <span class="mono">${as ? 'kg de ayuda' : 'kg'}</span></h2>${(() => { const hh = exHistory(id).filter(x => x.top); if (hh.length < 2) return ''; const a = hh[0], b = hh[hh.length - 1], d = r1(b.top - a.top); return `<p class="story">Empezaste con <b>${fmt(a.top, 1)} kg</b> el ${nice(a.k)}. Vas por <b>${fmt(b.top, 1)} kg</b>${d ? ` <em class="${(as ? d < 0 : d > 0) ? 'up' : 'flat'}">${d > 0 ? '+' : ''}${fmt(d, 1)} kg</em>` : ''}.</p>`; })()}${histBlock(id, k)}
+      </div><div class="tabp" data-p="learn" hidden>
       <h2 class="sec">Músculos</h2>${bodyMap(X.m)}
-      <h2 class="sec">Material</h2><div class="card glass eqcard"><span class="eqi">${ic('dumb')}</span><div><span class="mono">${esc(Q[0])}</span><b>${esc(Q[1])}</b><p>${esc(Q[2])}</p>${/Máquina|Polea|Multipower|Banco/.test(Q[0]) ? `<div class="field" style="margin-top:10px"><label for="mysetup">Mi ajuste (se queda guardado)</label><input id="mysetup" value="${esc((S.setup || {})[id] || '')}" placeholder="Ej.: asiento 4 · respaldo 2 · pin 6"></div>` : ''}</div></div>
+      <h2 class="sec">Material</h2><div class="card glass eqcard"><span class="eqi">${ic('dumb')}</span><div><span class="mono">${esc(Q[0])}</span><b>${esc(Q[1])}</b><p>${esc(Q[2])}</p><p class="small" id="gripLine" hidden></p>${/Máquina|Polea|Multipower|Banco/.test(Q[0]) ? `<div class="field" style="margin-top:10px"><label for="mysetup">Mi ajuste (se queda guardado)</label><input id="mysetup" value="${esc((S.setup || {})[id] || '')}" placeholder="Ej.: asiento 4 · respaldo 2 · pin 6"></div>` : ''}</div></div>
       <h2 class="sec">Técnica</h2><ol class="cues">${X.c.map(c => `<li>${esc(c)}</li>`).join('')}</ol>
       <div class="stack" style="margin-top:14px"><div class="note err">${ic('x')}<span><b>Error típico:</b> ${esc(X.e)}${ex3 && ex3.bad ? ' <button class="link" id="seeBad">Verlo en la figura</button>' : ''}</span></div>${X.note ? `<div class="note inj">${ic('info')}<span>${esc(X.note)}</span></div>` : ''}</div>
+      </div>
     </div>`;
     $('#shNav').innerHTML = list ? `<button class="btn ghost" id="shPrev" ${idx <= 0 ? 'disabled style="opacity:.4"' : ''}>${ic('back')}Anterior</button><button class="btn" id="shNext" style="flex:1">${idx < list.length - 1 ? `Siguiente ${ic('chev')}` : 'Volver al día'}</button>` : `<button class="btn block" id="shClose2">Cerrar</button>`;
     sh.classList.add('on'); sh.setAttribute('aria-hidden', 'false'); $('#shScroll').scrollTop = 0; document.body.style.overflow = 'hidden';
@@ -3194,7 +3261,7 @@ const Store = (() => {
     if (!gl3d) $('#stage').insertAdjacentHTML('beforeend', `<div class="empty" style="position:absolute;inset:60px 16px auto">Este navegador no puede mostrar la figura 3D.</div>`);
     bindSheet();
   }
-  let breathI = null, cmpURL = null, cmpSeen = false;
+  let breathI = null, cmpURL = null, cmpSeen = false, shTab = null;
   function findPlan(id) { for (const sid of Object.keys(SESSIONS)) { const e = exList(sid).find(x => x.id === id); if (e) return e; } return null; }
   function setBad(v) {
     cur.bad = v; if (viewer) viewer.setBad(v);
@@ -3211,7 +3278,11 @@ const Store = (() => {
     /* Capas del visor: recorrido y línea de fuerza */
     const LY = (S.settings.ly = S.settings.ly || { trail: true, force: true });
     if (viewer && gl3d) { viewer.layers = { ...LY }; viewer.setLayer('trail', LY.trail);
-      const hasF = viewer.hasForce(), hasT = viewer.hasTrail(); const bt = $('.ly-t'), bf = $('.ly-f'); bt.hidden = !hasT; bf.hidden = !hasF; bt.classList.toggle('on', LY.trail); bf.classList.toggle('on', LY.force); }
+      const hasF = viewer.hasForce(), hasT = viewer.hasTrail(); const bt = $('.ly-t'), bf = $('.ly-f'); bt.hidden = !hasT; bf.hidden = !hasF; bt.classList.toggle('on', LY.trail); bf.classList.toggle('on', LY.force); $('.ly-x').classList.toggle('on', !!LY.xray);
+      const gl = $('#gripLine'); if (gl && /Barra|Multipower/.test(EQ[cur.id][0])) { try { const gi = viewer.gripInfo(); if (gi.ratio > .4 && gi.ratio < 3) { gl.hidden = false; gl.innerHTML = `Manos separadas <b>${fmt(Math.round(gi.ratio * 10) / 10, 1)} ${Math.round(gi.ratio * 10) === 10 ? 'ancho' : 'anchos'} de hombro</b>, más o menos. Mira la vista «Agarre».`; } } catch (err) { } } }
+    /* Pestañas de la ficha */
+    const setTab = (t) => { shTab = t; $$('#shtabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t)); $$('.tabp').forEach(x => { x.hidden = x.dataset.p !== t; }); };
+    $$('#shtabs button').forEach(b => b.onclick = () => setTab(b.dataset.tab)); setTab(cur.k && cur.e ? (shTab || 'do') : 'learn');
     $$('[data-ly]').forEach(b => b.onclick = () => { const k = b.dataset.ly; LY[k] = !LY[k]; b.classList.toggle('on', LY[k]); if (viewer) viewer.setLayer(k, LY[k]); save(); });
     /* Respiración sincronizada con el esfuerzo */
     clearInterval(breathI); const br = $('#breath'); let lastB = null;
@@ -3231,7 +3302,7 @@ const Store = (() => {
     $$('#eff button').forEach(b => b.onclick = () => { const L = touchL(); L.eff = L.eff || {}; const v = +b.dataset.eff; if (L.eff[cur.id] === v) delete L.eff[cur.id]; else L.eff[cur.id] = v; $$('#eff button').forEach(x => x.classList.toggle('on', L.eff[cur.id] === +x.dataset.eff)); save(true);
       if (L.eff[cur.id] === 3) love(false, 'hard'); });
     const pn = $('#pain'); if (pn) pn.onclick = () => { const L = touchL(); L.pain = L.pain || {}; if (L.pain[cur.id]) delete L.pain[cur.id]; else L.pain[cur.id] = true; const on = !!L.pain[cur.id]; pn.classList.toggle('on', on); pn.querySelector('span').textContent = on ? 'Molestia anotada' : 'He notado una molestia'; $('#painTip').hidden = !on; save(true); };
-    const sm = $('#same'); if (sm) sm.onclick = () => { const L = touchL(), lt = lastTime(cur.id, cur.k); if (!lt) return; const sl = setList(cur.e), off = sl[0].w ? 1 : 0; L.kg[cur.id] = L.kg[cur.id] || []; if (off && lt.warm && lt.warm.w) L.kg[cur.id][0] = lt.warm.w; lt.sets.forEach((x, i) => { if (x.w && i + off < sl.length) L.kg[cur.id][i + off] = x.w; }); save(true); openEx(cur.id, cur.sid, cur.k); $('#shScroll').scrollTop = $('#sets').offsetTop - 120; };
+    const sm = $('#same'); if (sm) sm.onclick = () => { shTab = 'do'; const L = touchL(), lt = lastTime(cur.id, cur.k); if (!lt) return; const sl = setList(cur.e), off = sl[0].w ? 1 : 0; L.kg[cur.id] = L.kg[cur.id] || []; if (off && lt.warm && lt.warm.w) L.kg[cur.id][0] = lt.warm.w; lt.sets.forEach((x, i) => { if (x.w && i + off < sl.length) L.kg[cur.id][i + off] = x.w; }); save(true); openEx(cur.id, cur.sid, cur.k); $('#shScroll').scrollTop = $('#sets').offsetTop - 120; };
     /* Máquina ocupada: sustituto del mismo músculo, solo por hoy */
     const al = $('#alts'); if (al && cur.sid) { const L = S.log[cur.k] || null, A = alternatives(cur.id, cur.sid, L), hasSets = L && (L.sets[cur.id] || []).some(Boolean);
       al.innerHTML = hasSets ? `<p class="small muted">Ya has marcado series de este ejercicio hoy. Desmárcalas si quieres cambiarlo.</p>` : ((A.orig ? `<button class="exrow" data-alt="${A.orig}" data-back="1">${thumbImg(A.orig)}<div><div class="t">${esc(EXI[A.orig].n)}</div><div class="meta"><span class="g">volver al del plan</span></div></div>${ic('chev')}</button>` : '') + (A.list.length ? A.list.map(x => `<button class="exrow" data-alt="${x}">${thumbImg(x)}<div><div class="t">${esc(EXI[x].n)}</div><div class="meta"><span>${esc(EQ[x][0])}</span><span class="r">${esc(EXI[x].m[0])}</span></div></div>${ic('chev')}</button>`).join('') : `<p class="small muted">No tengo otro ejercicio equivalente para este músculo.</p>`));
@@ -3245,8 +3316,11 @@ const Store = (() => {
         const L = touch(); const a = L.sets[cur.id] = L.sets[cur.id] || []; a[i] = !a[i]; row.classList.toggle('on', a[i]);
         (L.at[cur.id] = L.at[cur.id] || [])[i] = a[i] ? Date.now() : null;
         const sm = row.querySelector('.r small'); const st = setList(cur.e)[i]; sm.textContent = a[i] ? `Guardada ${hhmm(Date.now())}` : (st.w ? 'Calent. · 30"' : `Serie ${setList(cur.e)[0].w ? i : i + 1}`);
+        const kgA = L.kg[cur.id] = L.kg[cur.id] || [], SL = setList(cur.e);
+        if (a[i] && !st.w && kgA[i] == null) { for (let j = i - 1; j >= 0; j--) { if (!SL[j].w && a[j] && kgA[j] != null) { kgA[i] = kgA[j]; inp.value = String(kgA[j]).replace('.', ','); break; } } }
+        const nx = SL.findIndex((x, j) => !a[j]), nxt = nx < 0 ? 'Era la última serie' : `Siguiente: ${SL[nx].w ? 'calentamiento' : `${num(kgA[nx]) ?? num(kgA[i]) ? fmt(num(kgA[nx]) ?? num(kgA[i]), 1) + ' kg × ' : ''}${RL(SL[nx].reps)}${typeof SL[nx].reps === 'number' ? ' reps' : ''}`}`;
         save(true); chip(true);
-        if (a[i]) { startRest(st.w ? 30 : cur.e.rest); beatCheck(i); if (Math.random() < .25 && !(S.log[cur.k].cel || {})[cur.id]) love(); }
+        if (a[i]) { startRest(st.w ? 30 : cur.e.rest, nxt); beatCheck(i); if (Math.random() < .25 && !(S.log[cur.k].cel || {})[cur.id]) love(); }
         else stopRest();
       };
     });
@@ -3266,10 +3340,11 @@ const Store = (() => {
   function beep() { if (S.settings.beep === false) return; try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); [0, .22, .44].forEach((d, i) => { const o = actx.createOscillator(), g = actx.createGain(); o.type = 'sine'; o.frequency.value = i === 2 ? 1175 : 880; g.gain.setValueAtTime(.0001, actx.currentTime + d); g.gain.exponentialRampToValueAtTime(.25, actx.currentTime + d + .02); g.gain.exponentialRampToValueAtTime(.0001, actx.currentTime + d + .18); o.connect(g); g.connect(actx.destination); o.start(actx.currentTime + d); o.stop(actx.currentTime + d + .2); }); } catch (e) { } }
   /* Descanso */
   let restEnd = 0, restI = null;
-  function startRest(sec) {
+  function startRest(sec, label) {
+    const rl = $('#restL'); if (rl) rl.textContent = label || 'Descanso'; let buzzed = false;
     try { if (S.settings.beep !== false) { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } } catch (e) { }
     restEnd = Date.now() + sec * 1000; const el = $('#rest'); el.classList.add('on'); el.classList.toggle('insheet', $('#sheet').classList.contains('on'));
-    clearInterval(restI); const tick = () => { const left = Math.max(0, Math.round((restEnd - Date.now()) / 1000)); $('#restT').textContent = `${Math.floor(left / 60)}:${pad(left % 60)}`; if (!left) { stopRest(); beep(); try { S.settings.beep !== false && navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (e) { } toast('Descanso terminado. ¡A por la siguiente serie!', 'SaraGym'); } };
+    clearInterval(restI); const tick = () => { const left = Math.max(0, Math.round((restEnd - Date.now()) / 1000)); $('#restT').textContent = `${Math.floor(left / 60)}:${pad(left % 60)}`; if (left === 10 && !buzzed) { buzzed = true; try { S.settings.beep !== false && navigator.vibrate && navigator.vibrate(80); } catch (e) { } } if (!left) { stopRest(); beep(); try { S.settings.beep !== false && navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (e) { } toast('Descanso terminado. ¡A por la siguiente serie!', 'SaraGym'); } };
     tick(); restI = setInterval(tick, 500);
   }
   function stopRest() { clearInterval(restI); $('#rest').classList.remove('on'); }
@@ -3334,8 +3409,9 @@ const Store = (() => {
 
   /* ---------- Eventos globales ---------- */
   document.addEventListener('click', (ev) => {
-    const t = ev.target.closest('[data-pause],[data-ready],[data-short],[data-open],[data-warm],[data-fin],[data-finish],[data-recipe],[data-start],[data-backup],[data-undo],[data-install],[data-goalok]'); if (!t) return;
+    const t = ev.target.closest('[data-letter],[data-pause],[data-ready],[data-short],[data-open],[data-warm],[data-fin],[data-finish],[data-recipe],[data-start],[data-backup],[data-undo],[data-install],[data-goalok]'); if (!t) return;
     if (t.dataset.backup) { copyBackup(null); return; }
+    if (t.dataset.letter) { if (t.dataset.letter === 'close') openLetter = null; else { openLetter = t.dataset.letter; (S.lettersRead = S.lettersRead || {})[openLetter] = Date.now(); save(true); confetti(.7); } render(); return; }
     if (t.dataset.pause) { ev.preventDefault(); const mk = key(monday(today())); S.pauses = S.pauses || {}; if (S.pauses[mk]) delete S.pauses[mk]; else { S.pauses[mk] = true; toast('Semana en pausa. Tu racha te espera intacta. Cuídate.', 'Sin culpa', 'heart'); } save(); render(); return; }
     if (t.dataset.ready) { const L = logOf(t.dataset.key, t.dataset.sid), v = +t.dataset.ready; L.ready = L.ready === v ? null : v; save(); render(); if (L.ready === 3) toast('Hoy es día de intentar superar algo. A por ello.', 'Con ganas', 'flame'); return; }
     if (t.dataset.short) { const L = logOf(t.dataset.key, t.dataset.sid); L.short = !L.short; save(); render(); return; }
@@ -3346,7 +3422,11 @@ const Store = (() => {
     if (t.dataset.recipe) { openRecipe(t.dataset.recipe, +t.dataset.kcal || 400); return; }
     if (t.dataset.warm) { const L = logOf(t.dataset.key, t.dataset.sid); L.warm[t.dataset.warm] = !L.warm[t.dataset.warm]; save(); render(); return; }
     if (t.dataset.fin) { const L = logOf(t.dataset.key, t.dataset.sid); L.fin = !L.fin; save(); render(); return; }
-    if (t.dataset.finish) { const L = logOf(t.dataset.finish, t.dataset.sid); L.done = true; L.doneAt = Date.now(); save(true); render(); stopRest(); love(true); checkHitos(); window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); return; }
+    if (t.dataset.finish) { const L = logOf(t.dataset.finish, t.dataset.sid); const prevK = Object.keys(S.log).filter(x => x < t.dataset.finish && S.log[x].done).sort().pop(), gap = prevK ? Math.round((parse(t.dataset.finish) - parse(prevK)) / 864e5) : 0;
+      L.done = true; L.doneAt = Date.now(); save(true); render(); stopRest(); const stt = streak();
+      if (stt.thisN === stt.goal && key(monday(parse(t.dataset.finish))) === key(monday(today()))) { confetti(1.3); celebrate('Semana redonda', `Has cumplido tus ${stt.goal} entrenos de esta semana. Así se construye.`, 'trophy'); }
+      else if (gap > 14) love(false, 'back'); else if (L.ready === 1) love(false, 'pride'); else love(true);
+      checkHitos(); window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); return; }
     if (t.dataset.start) { const k = t.dataset.day; if (S.log[k] && progressOf(k).done) return; S.log[k] = { s: t.dataset.start, sets: {}, kg: {}, reps: {}, warm: {}, fin: false, done: false, extra: true }; save(); render(); window.scrollTo(0, 0); }
   });
   window.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if ($('#sheet').classList.contains('on')) closeSheet(); else closeDrawer(); } });
@@ -3358,11 +3438,11 @@ const Store = (() => {
     document.body.insertAdjacentHTML('beforeend', `
       <div class="tabs"><nav aria-label="Pestañas"><a href="#inicio" data-r="inicio">${ic('home')}Inicio</a><a href="#hoy" data-r="hoy,dia,semana,ejercicios">${ic('dumb')}Entreno</a><a href="#comida" data-r="comida,recetas,intercambios">${ic('food')}Comida</a><a href="#logros" data-r="logros">${ic('trophy')}Logros</a><a href="#calendario" data-r="calendario,fecha,progreso">${ic('cal')}Historial</a></nav></div>
       <section class="sheet" id="sheet" aria-hidden="true" role="dialog" aria-label="Detalle"><div class="wrap"><div class="bar-top"><button class="iconbtn" id="shClose" aria-label="Cerrar">${ic('x')}</button><span class="mono" id="shPos"></span><span style="width:40px"></span></div></div><div class="scroll" id="shScroll"><div class="inner" id="shBody"></div></div><div class="navfoot"><div class="wrap" id="shNav"></div></div></section>
-      <div class="rest" id="rest" role="status"><div><span>Descanso</span><br><b id="restT">0:00</b></div><button id="restSkip">Saltar</button></div>
+      <div class="rest" id="rest" role="status"><div><span id="restL">Descanso</span><br><b id="restT">0:00</b></div><button id="restAdd" aria-label="Quince segundos más">+15"</button><button id="restSkip">Saltar</button></div>
       <button class="toast" id="toast" aria-live="polite"><span class="av" id="toastI">${ic('heart')}</span><span><b id="toastT"></b><p id="toastP"></p></span></button>
       <div class="onb" id="onb" hidden></div>`);
     $('#menuBtn').onclick = openDrawer; $('#scrim').onclick = closeDrawer; $('#drawer').addEventListener('click', (e) => { if (e.target.closest('a')) closeDrawer(); });
-    $('#shClose').onclick = closeSheet; $('#restSkip').onclick = stopRest; $('#toast').onclick = () => { const t = $('#toast'); clearTimeout(t._h); t.classList.remove('on'); setTimeout(nextToast, 300); };
+    $('#shClose').onclick = closeSheet; $('#restSkip').onclick = stopRest; $('#restAdd').onclick = () => { restEnd += 15000; }; $('#toast').onclick = () => { const t = $('#toast'); clearTimeout(t._h); t.classList.remove('on'); setTimeout(nextToast, 300); };
     readHash(); render();
     S.onboarded = true; scheduleLove(); setTimeout(() => love(), 25000);
     Store.onChange(() => { chip(true); const si = $('#saveInfo'); if (si) si.innerHTML = saveInfo(); });
