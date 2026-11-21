@@ -649,6 +649,54 @@ table.hist td:first-child, table.hist th:first-child { text-align: left; }
 .card.letter .li { width: 44px; height: 44px; border-radius: 14px; background: var(--red); display: grid; place-items: center; box-shadow: 0 0 16px rgba(255,45,70,.6); } .card.letter svg { width: 20px; height: 20px; } .card.letter > svg { width: 16px; height: 16px; color: var(--ink2); }
 .card.letter b { display: block; font-size: 15.5px; } .card.letter small { color: var(--ink2); font-size: 13px; }
 .card.letter.open { display: grid; grid-template-columns: 1fr; gap: 10px; } .card.letter.open p { margin: 0; font-size: 16px; line-height: 1.5; } .card.letter.open .btn { justify-self: start; }
+
+/* ===== v5: celebraciones a pantalla completa, insignias, reto semanal ===== */
+.boom { position: fixed; inset: 0; z-index: 110; display: grid; place-items: center; padding: 24px; text-align: center; overflow: hidden; --c: #FFD43B; background: radial-gradient(circle at 50% 40%, rgba(22,24,32,.9), rgba(4,5,8,.98) 72%); opacity: 0; visibility: hidden; transition: opacity .28s, visibility .28s; }
+.boom.on { opacity: 1; visibility: visible; }
+.boom .rays { position: absolute; left: 50%; top: 38%; width: 190vmax; height: 190vmax; translate: -50% -50%; background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--c) 26%, transparent) 0 5deg, transparent 5deg 18deg); -webkit-mask-image: radial-gradient(circle, #000 0, transparent 52%); mask-image: radial-gradient(circle, #000 0, transparent 52%); animation: bspin 16s linear infinite; }
+.boom .ring { position: absolute; left: 50%; top: 38%; width: 170px; height: 170px; margin: -85px 0 0 -85px; border-radius: 50%; border: 2px solid var(--c); opacity: 0; }
+.boom.on .ring { animation: bring 1.8s ease-out infinite; } .boom.on .ring.r2 { animation-delay: .9s; }
+.bcore { position: relative; display: grid; justify-items: center; gap: 8px; max-width: 340px; }
+.medalw { filter: drop-shadow(0 0 26px color-mix(in srgb, var(--c) 75%, transparent)) drop-shadow(0 10px 18px rgba(0,0,0,.5)); margin-bottom: 10px; }
+.boom.on .medalw { animation: bmedal .75s cubic-bezier(.2,1.5,.3,1) both; }
+.medal { width: 136px; height: 150px; display: grid; place-items: center; position: relative; overflow: hidden; clip-path: polygon(50% 0, 96% 25%, 96% 75%, 50% 100%, 4% 75%, 4% 25%); background: linear-gradient(150deg, #fff 0%, var(--c) 28%, color-mix(in srgb, var(--c) 55%, #000) 100%); color: #15110A; }
+.medal::before { content: ""; position: absolute; inset: 9px; clip-path: polygon(50% 0, 96% 25%, 96% 75%, 50% 100%, 4% 75%, 4% 25%); background: linear-gradient(330deg, color-mix(in srgb, var(--c) 70%, #000), var(--c)); }
+.medal::after { content: ""; position: absolute; inset: -20% auto -20% -60%; width: 46%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.75), transparent); transform: skewX(-18deg); }
+.boom.on .medal::after { animation: bshine 2.4s .5s ease-in-out infinite; }
+.medal svg { width: 62px; height: 62px; position: relative; stroke-width: 2.2; }
+.boom .mono { color: var(--c); letter-spacing: .2em; font-size: 12px; }
+.boom h2 { font-family: var(--f-display); font-weight: 800; font-size: clamp(32px, 9.5vw, 46px); line-height: .96; text-transform: uppercase; font-stretch: 78%; margin: 4px 0 0; text-wrap: balance; }
+.bnum { display: grid; justify-items: center; margin-top: 6px; }
+.bnum b { font-family: var(--f-display); font-size: clamp(56px, 18vw, 78px); font-weight: 800; line-height: 1; font-stretch: 85%; color: var(--c); text-shadow: 0 0 34px color-mix(in srgb, var(--c) 65%, transparent); }
+.bnum small { font-family: var(--f-mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink2); margin-top: 4px; }
+.bnum .was { font-size: 15px; color: var(--ink3); text-decoration: line-through; margin-bottom: 2px; }
+.boom p { margin: 8px 0 0; color: var(--ink2); font-size: 15px; line-height: 1.4; }
+.boom .btn { margin-top: 18px; min-width: 180px; background: var(--c); color: #120E08; box-shadow: 0 8px 28px color-mix(in srgb, var(--c) 45%, transparent); }
+.boom.on .mono, .boom.on h2, .boom.on .bnum, .boom.on p, .boom.on .btn { animation: brise .5s both; } .boom.on h2 { animation-delay: .22s; } .boom.on .bnum { animation-delay: .32s; } .boom.on p { animation-delay: .5s; } .boom.on .btn { animation-delay: .8s; } .boom.on .mono { animation-delay: .14s; }
+@keyframes bspin { to { rotate: 360deg; } }
+@keyframes bring { from { opacity: .75; scale: .8; } to { opacity: 0; scale: 2.6; } }
+@keyframes bmedal { from { scale: 0; rotate: -50deg; } to { scale: 1; rotate: 0deg; } }
+@keyframes bshine { 0% { left: -60%; } 55%, 100% { left: 130%; } }
+@keyframes brise { from { opacity: 0; translate: 0 16px; } to { opacity: 1; translate: 0 0; } }
+@keyframes pop { 0% { scale: .6; } 60% { scale: 1.18; } 100% { scale: 1; } }
+.setrow.on .ok, .checkrow.on .box, .dots i.on, .shrow.on .box { animation: pop .32s cubic-bezier(.2,1.4,.3,1); }
+.bar i { transition: width .7s cubic-bezier(.2,.8,.2,1); }
+.badges { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.bdg { display: grid; justify-items: center; gap: 5px; padding: 14px 6px 12px; border-radius: var(--r-md); background: var(--glass); border: 1px solid var(--line2); color: var(--ink); text-align: center; }
+.bdg:active { transform: scale(.98); }
+.hexw { filter: drop-shadow(0 0 10px color-mix(in srgb, var(--c) 60%, transparent)); } .bdg.lock .hexw { filter: none; }
+.hex { width: 54px; height: 60px; display: grid; place-items: center; clip-path: polygon(50% 0, 96% 25%, 96% 75%, 50% 100%, 4% 75%, 4% 25%); background: linear-gradient(150deg, #fff 0%, var(--c) 30%, color-mix(in srgb, var(--c) 55%, #000) 100%); color: #15110A; }
+.hex svg { width: 24px; height: 24px; stroke-width: 2.2; } .bdg.lock .hex { background: #20242E; color: var(--ink3); }
+.bdg b { font-size: 12.5px; line-height: 1.15; } .bdg small { font-size: 10.5px; color: var(--ink3); font-family: var(--f-mono); }
+.pips { display: flex; gap: 3px; } .pips i { width: 7px; height: 7px; border-radius: 50%; background: #2A2F3B; } .pips i.on { background: var(--c); box-shadow: 0 0 6px var(--c); }
+.card.chal { display: grid; gap: 4px; margin-top: 10px; padding: 14px 16px; } .chh { display: flex; justify-content: space-between; gap: 10px; } .chh .mono:first-child { color: var(--warn); }
+.chal > b { font-size: 16.5px; } .chb { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px; align-items: center; margin-top: 6px; } .chb b { font-size: 14px; }
+.chal .bar i { background: linear-gradient(90deg, #FFD27A, var(--warn)); box-shadow: 0 0 12px rgba(255,176,32,.6); }
+.card.chal.ok { border-color: rgba(46,229,157,.45); background: linear-gradient(160deg, rgba(46,229,157,.12), rgba(46,229,157,.02)); } .chal.ok .chh .mono { color: var(--good); } .chal.ok .bar i { background: var(--good); box-shadow: 0 0 12px rgba(46,229,157,.6); }
+.marks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; } .marks span { padding: 10px 4px; border-radius: 12px; background: var(--glass); border: 1px solid var(--line2); text-align: center; font-size: 10.5px; color: var(--ink2); line-height: 1.25; } .marks b { display: block; font-size: 20px; color: var(--ink); font-weight: 800; }
+.ladder { display: grid; gap: 6px; padding: 12px 14px; border-radius: 14px; background: linear-gradient(135deg, rgba(255,212,59,.12), rgba(255,212,59,.02)); border: 1px solid rgba(255,212,59,.3); margin-bottom: 12px; } .ldh { display: flex; justify-content: space-between; align-items: baseline; } .ldh .mono { color: #FFD43B; } .ldh b { font-size: 18px; }
+.ladder .bar i { background: linear-gradient(90deg, #FFE78A, #FFD43B); box-shadow: 0 0 12px rgba(255,212,59,.6); }
+@media (prefers-reduced-motion: reduce) { .boom .rays, .boom.on .ring, .boom.on .medalw, .boom.on .medal::after, .boom.on .mono, .boom.on h2, .boom.on .bnum, .boom.on p, .boom.on .btn, .setrow.on .ok, .checkrow.on .box { animation: none !important; } .bar i { transition: none; } }
 </style>
 <main class="app"><div id="view"></div></main>
 <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
@@ -2448,13 +2496,21 @@ const Store = (() => {
   function checkHitos(silent) {
     HC = null; const h = hitos(), seen = new Set(S.seen), fresh = h.list.filter(x => !seen.has(x.id));
     const rw = rewardState(h.points).got.filter(r => !seen.has('rw:' + r.pts));
-    if (!fresh.length && !rw.length) return;
+    if (!fresh.length && !rw.length) { checkExtras(silent); return; }
     fresh.forEach(x => seen.add(x.id)); rw.forEach(r => seen.add('rw:' + r.pts));
     S.seen = [...seen]; Store.save(S);
-    if (silent) return;
-    rw.forEach(r => celebrate('Recompensa desbloqueada', r.t ? `${r.t}. Pídesela a ${S.settings.firma || 'Simon'}.` : `Has llegado a ${fmt(r.pts)} puntos. Tienes una sorpresa de ${S.settings.firma || 'Simon'}.`, 'gift'));
-    const order = { big: 0, pr: 1, wk: 2, w: 3, m: 4, food: 5 };
-    fresh.filter(x => { if (x.kind !== 'pr') return true; const [, id, k] = x.id.split(':'); const L = S.log[k]; return !(L && L.cel && L.cel[id]); }).sort((x, y) => order[x.kind] - order[y.kind]).slice(0, 2).forEach(x => celebrate(x.t, `${x.d} · +${x.pts} puntos`, x.kind === 'pr' ? 'trophy' : 'star'));
+    if (silent) { checkExtras(true); return; }
+    setTimeout(() => checkExtras(false), 50);
+    rw.forEach(r => boom({ kind: 'gift', icon: 'gift', kicker: 'Recompensa desbloqueada', title: r.t || 'Sorpresa', from: 0, to: r.pts, unit: 'puntos', sub: r.t ? `Pídesela a ${S.settings.firma || 'Simon'}.` : `Tienes una sorpresa de ${S.settings.firma || 'Simon'}. Pregúntale.` }));
+    fresh.filter(x => x.kind === 'wk').slice(0, 1).forEach(x => boom({ kind: 'week', icon: 'check', kicker: 'Semana redonda', title: 'Objetivo cumplido', sub: `${x.d}. Así se construye.` }));
+    fresh.filter(x => x.kind === 'big').slice(0, 2).forEach(x => boom({ kind: 'level', color: '#FFD43B', icon: 'star', kicker: 'Hito conseguido', title: x.t, from: 0, to: x.pts, unit: 'puntos', sub: x.d }));
+    const order = { pr: 1, w: 3, m: 4, food: 5 };
+    fresh.filter(x => order[x.kind]).filter(x => { if (x.kind !== 'pr') return true; const [, id, k] = x.id.split(':'); const L = S.log[k]; return !(L && L.cel && L.cel[id]); }).sort((x, y) => order[x.kind] - order[y.kind]).slice(0, boomOn ? 0 : 2).forEach(x => celebrate(x.t, `${x.d} · +${x.pts} puntos`, x.kind === 'pr' ? 'trophy' : 'star'));
+  }
+  function checkExtras(silent) {
+    const h = hitos(); if (S.lvSeen == null) { S.lvSeen = h.lv; Store.save(S); }
+    else if (h.lv > S.lvSeen) { S.lvSeen = h.lv; Store.save(S); if (!silent) boom({ kind: 'level', icon: 'flame', kicker: `Nivel ${h.lv + 1} de ${LEVELS.length}`, title: h.lvName, from: LEVELS[h.lv][0] - 60, to: h.points, unit: 'puntos', sub: h.next ? `Siguiente: «${h.next[1]}» a los ${fmt(h.next[0])} puntos.` : 'Has llegado a lo más alto.' }); }
+    checkChallenge(silent); checkBadges(silent);
   }
 
   /* ---------- Miniaturas 3D ---------- */
@@ -2501,15 +2557,75 @@ const Store = (() => {
       if (el < 2600) requestAnimationFrame(step); else { g.clearRect(0, 0, W, H); cv.style.display = 'none'; }
     })(t0);
   }
+  /* Celebración grande a pantalla completa: récords, semana redonda, nivel, insignias, recompensas. Van en cola, de una en una. */
+  const boomQ = []; let boomOn = false, boomT = null;
+  function fanfare() { if (S.settings.beep === false) return; try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); [523, 659, 784, 1047, 1319].forEach((f, i) => { const o = actx.createOscillator(), g = actx.createGain(), t0 = actx.currentTime + i * .085; o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(.0001, t0); g.gain.exponentialRampToValueAtTime(.2, t0 + .02); g.gain.exponentialRampToValueAtTime(.0001, t0 + (i === 4 ? .7 : .22)); o.connect(g); g.connect(actx.destination); o.start(t0); o.stop(t0 + .75); }); } catch (e) { } }
+  /* En mitad del entreno solo interrumpe un récord; lo demás espera a cerrar el ejercicio (máximo 4 seguidas) */
+  const boomHold = [];
+  function boom(o) { if (!o.now && $('#sheet') && $('#sheet').classList.contains('on')) { boomHold.push(o); return; } if (boomQ.length < 4) boomQ.push(o); if (!boomOn) nextBoom(); }
+  function flushBoom() { boomHold.splice(0).slice(0, 4).forEach(o => boom({ ...o, now: true })); }
+  const SING = { entrenos: 'entreno', 'semanas cumplidas': 'semana cumplida', 'semanas seguidas': 'semana seguida', 'récords': 'récord', 'toneladas movidas': 'tonelada movida', series: 'serie', 'ejercicios distintos': 'ejercicio distinto', 'días flojos en que viniste': 'día flojo en que viniste', 'entrenos antes de las 9': 'entreno antes de las 9', 'retos semanales': 'reto semanal', 'días de comida completos': 'día de comida completo', mediciones: 'medición' };
+  const unitN = (v, u) => v === 1 && SING[u] ? SING[u] : u;
+  function nextBoom() {
+    clearTimeout(boomT); const o = boomQ.shift(), el = $('#boom'); if (!el) return;
+    if (!o) { boomOn = false; el.classList.remove('on'); return; }
+    boomOn = true; const dec = o.to != null && (o.to % 1 || (o.from || 0) % 1) ? 1 : 0;
+    el.style.setProperty('--c', o.color || { pr: '#FFD43B', week: '#2EE59D', level: '#FF2D46', gift: '#C9A8FF', done: '#FF6A2A' }[o.kind] || '#FFD43B');
+    el.innerHTML = `<div class="rays"></div><i class="ring"></i><i class="ring r2"></i><div class="bcore"><div class="medalw"><div class="medal">${ic(o.icon || 'trophy')}</div></div><span class="mono">${esc(o.kicker || '')}</span><h2>${esc(o.title || '')}</h2>
+      ${o.to != null ? `<div class="bnum">${o.from != null && o.showFrom ? `<span class="was num">${fmt(o.from, dec)} ${esc(o.unit || '')}</span>` : ''}<b class="num" id="boomN">${fmt(o.from || 0, dec)}</b><small>${esc(o.unit || '')}</small></div>` : ''}
+      ${o.sub ? `<p>${esc(o.sub)}</p>` : ''}<button class="btn" id="boomOk">${boomQ.length ? 'Siguiente' : 'Seguir'}</button></div>`;
+    el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+    confetti(o.power || 1.2); fanfare(); try { S.settings.beep !== false && navigator.vibrate && navigator.vibrate([60, 40, 60, 40, 180]); } catch (e) { }
+    if (o.to != null) { const n = $('#boomN'), a = o.from || 0, b = o.to, t0 = performance.now(), red = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches; const stepN = (now) => { const u = red ? 1 : Math.min(1, (now - t0 - 350) / 900); if (!n.isConnected) return; n.textContent = fmt(a + (b - a) * (u < 0 ? 0 : 1 - Math.pow(1 - u, 3)), dec); if (u < 1) requestAnimationFrame(stepN); }; requestAnimationFrame(stepN); }
+    $('#boomOk').onclick = (ev) => { ev.stopPropagation(); nextBoom(); }; el.onclick = nextBoom; boomT = setTimeout(nextBoom, 9000);
+  }
+  /* Insignias con cinco niveles. Se calculan desde los datos, como los hitos. */
+  const TIERS = ['Bronce', 'Plata', 'Oro', 'Platino', 'Diamante'], TCOL = ['#D08A4E', '#C9CEDA', '#FFD43B', '#7CF3C4', '#8FE3FF'];
+  function badges() {
+    const h = hitos(), st = streak(), logs = Object.values(S.log), done = logs.filter(L => L.done), exN = new Set();
+    logs.forEach(L => Object.keys(L.sets || {}).forEach(id => { if ((L.sets[id] || []).some(Boolean)) exN.add(id); }));
+    const early = done.filter(L => { const ts = Object.values(L.at || {}).flat().filter(Boolean); return ts.length && new Date(Math.min(...ts)).getHours() < 9; }).length;
+    const B = [['ses', 'Constante', 'cal', h.nw, [1, 10, 25, 50, 100], 'entrenos'], ['wk', 'Semana redonda', 'check', h.weeks, [1, 4, 8, 16, 32], 'semanas cumplidas'], ['str', 'En racha', 'flame', Math.max(S.bestStreak || 0, st.n), [2, 4, 8, 12, 26], 'semanas seguidas'],
+      ['pr', 'Rompemarcas', 'trophy', h.list.filter(x => x.kind === 'pr').length, [1, 5, 15, 30, 60], 'récords'], ['ton', 'Fuerza bruta', 'dumb', Math.floor(h.ton / 1000), [1, 5, 15, 40, 100], 'toneladas movidas'], ['sets', 'Incansable', 'muscle', h.sets, [50, 250, 750, 2000, 5000], 'series'],
+      ['ex', 'Exploradora', 'grid', exN.size, [5, 12, 20, 30, 45], 'ejercicios distintos'], ['low', 'Valiente', 'heart', done.filter(L => L.ready === 1).length, [1, 3, 6, 12, 25], 'días flojos en que viniste'], ['am', 'Madrugadora', 'bolt', early, [1, 5, 10, 25, 50], 'entrenos antes de las 9'],
+      ['chal', 'Retadora', 'star', Object.values(S.chal || {}).filter(c => c.done).length, [1, 4, 8, 16, 30], 'retos semanales'], ['food', 'Bien alimentada', 'leaf', h.list.filter(x => x.id.startsWith('meal:')).length, [1, 7, 21, 50, 100], 'días de comida completos'], ['mes', 'Con datos', 'scale', S.measures.filter(m => !m.src).length, [1, 3, 6, 12, 24], 'mediciones']];
+    return B.map(([id, n, icn, v, T, u]) => { let tier = 0; T.forEach((t, i) => { if (v >= t) tier = i + 1; }); return { id, n, ic: icn, v, T, u, tier, next: T[tier] ?? null, prev: tier ? T[tier - 1] : 0 }; });
+  }
+  function checkBadges(silent) {
+    const st = streak(); if (st.n > (S.bestStreak || 0)) S.bestStreak = st.n;
+    const B = badges(), first = !S.bseen; S.bseen = S.bseen || {}; let ch = first;
+    B.forEach(b => { const was = S.bseen[b.id] || 0; if (b.tier > was) { S.bseen[b.id] = b.tier; ch = true; if (!first && !silent) boom({ kind: 'badge', color: TCOL[b.tier - 1], icon: b.ic, kicker: `Insignia · ${TIERS[b.tier - 1]}`, title: b.n, from: b.prev && b.tier > 1 ? b.T[b.tier - 2] : 0, to: b.T[b.tier - 1], unit: unitN(b.T[b.tier - 1], b.u), sub: b.next ? `Siguiente nivel: ${fmt(b.next)} ${b.u}.` : 'Nivel máximo. No hay más arriba.' }); } });
+    if (ch) Store.save(S);
+  }
+  /* Reto de la semana: uno solo, cambia cada lunes */
+  function challenge() {
+    const mon = monday(today()), mk = key(mon), wk = weekKeys(0), st = streak(), ws = weekStats(0), lw = weekStats(-1);
+    const C = [['full', 'Semana completa', `Haz tus ${st.goal} entrenos de esta semana`, st.goal, st.thisN], ['pr', 'Rompe dos marcas', 'Supera tu peso en 2 ejercicios esta semana', 2, hitos().list.filter(x => x.kind === 'pr' && x.date >= wk[0] && x.date <= wk[6]).length],
+      ['sets', 'Más series que la semana pasada', `Llega a ${Math.max(40, Math.ceil(lw.sets * 1.1 / 5) * 5)} series`, Math.max(40, Math.ceil(lw.sets * 1.1 / 5) * 5), ws.sets], ['meal', 'Come con cabeza', 'Marca 12 comidas esta semana', 12, wk.reduce((a, k) => a + eatenCount(k), 0)]];
+    const [id, t, d, target, val] = C[isoWeek(mon) % C.length]; return { mk, id, t, d, target, val: Math.min(target, val), done: val >= target };
+  }
+  function challengeCard() {
+    const c = challenge(), left = 7 - wd(today());
+    return `<div class="card glass chal ${c.done ? 'ok' : ''}"><div class="chh"><span class="mono">Reto de la semana</span><span class="mono">${c.done ? 'conseguido' : left === 1 ? 'último día' : `quedan ${left} días`}</span></div><b>${esc(c.t)}</b><span class="small muted">${esc(c.d)}</span><div class="chb"><div class="bar"><i style="width:${c.val / c.target * 100}%"></i></div><b class="num">${c.val}/${c.target}</b></div></div>`;
+  }
+  function checkChallenge(silent) { const c = challenge(); S.chal = S.chal || {}; if (c.done && !S.chal[c.mk]) { S.chal[c.mk] = { id: c.id, done: true }; Store.save(S); if (!silent) boom({ kind: 'week', icon: 'star', kicker: 'Reto de la semana', title: c.t, to: c.target, from: 0, unit: `de ${c.target}`, sub: 'Conseguido. Suma para tu insignia de Retadora.' }); } }
+  /* Marcas de un ejercicio y siguiente escalón */
+  function marksHTML(id) {
+    const h = exHistory(id).filter(x => x.top); if (!h.length || h[0].as) return '';
+    const top = Math.max(...h.map(x => x.top)), reps = Math.max(0, ...h.flatMap(x => x.sets.filter(s => s.w === top && s.r).map(s => s.r))), vol = Math.max(...h.map(x => x.vol || 0)), stp = BIG.includes(id) ? 5 : 2;
+    const next = Math.floor(top / stp + 1e-6) * stp + stp, prev = next - stp, rel = top / curWeight();
+    return `<div class="marks num"><span><b>${fmt(top, 1)}</b>kg · mejor peso</span><span><b>${reps || '—'}</b>reps con ese peso</span><span><b>${fmt(Math.round(vol))}</b>kg en un día</span></div>
+      <div class="ladder"><div class="ldh"><span class="mono">Próximo escalón</span><b class="num">${next} kg</b></div><div class="bar"><i style="width:${Math.max(6, (top - prev) / stp * 100)}%"></i></div><span class="small muted">Te faltan ${fmt(r1(next - top), 1)} kg${rel >= .3 ? ` · ahora mueves ${fmt(rel, 1)} veces tu peso` : ''}.</span></div>`;
+  }
   /* Compara la serie que acaba de marcar con la última vez */
   function beatCheck(i) {
     const st = setList(cur.e)[i]; if (st.w) return; const L = S.log[cur.k], lt = lastTime(cur.id, cur.k); if (!lt) return;
     const w = num(L.kg[cur.id] && L.kg[cur.id][i]), r = repsOf(cur.e, i, L); L.cel = L.cel || {};
     const nm = EXI[cur.id].n, wi = setList(cur.e)[0].w ? i - 1 : i, ps = lt.sets[wi];
-    if (lt.as) { if (w != null && lt.top && w < lt.top && !L.cel[cur.id]) { L.cel[cur.id] = 'kg'; save(); confetti(1); celebrate('¡Menos ayuda que la última vez!', `${nm}: de ${fmt(lt.top, 1)} a ${fmt(w, 1)} kg de ayuda. Cada kilo menos es más fuerza tuya.`, 'trophy'); } return; }
+    if (lt.as) { if (w != null && lt.top && w < lt.top && !L.cel[cur.id]) { L.cel[cur.id] = 'kg'; save(); boom({ now: true, kind: 'pr', icon: 'trophy', kicker: '¡Menos ayuda que la última vez!', title: nm, from: lt.top, to: w, showFrom: true, unit: 'kg de ayuda', sub: 'Cada kilo menos de ayuda es más fuerza tuya.' }); } return; }
     if (w && lt.top && w > lt.top && !L.cel[cur.id]) {
-      L.cel[cur.id] = 'kg'; save(); confetti(1);
-      celebrate('¡Enhorabuena, has subido de peso!', `${nm}: de ${fmt(lt.top, 1)} a ${fmt(w, 1)} kg respecto al ${nice(lt.k)}. A partir de ahora toca mantenerlo.`, 'trophy'); return;
+      L.cel[cur.id] = 'kg'; save(); const allT = Math.max(0, ...exHistory(cur.id).filter(x => x.k < cur.k).map(x => x.top || 0)), abs = w > allT, stp = BIG.includes(cur.id) ? 5 : 2, crossed = Math.floor(w / stp + 1e-6) > Math.floor(lt.top / stp + 1e-6) ? Math.floor(w / stp + 1e-6) * stp : 0;
+      boom({ now: true, kind: 'pr', icon: 'trophy', kicker: abs ? 'Récord absoluto' : '¡Enhorabuena, has subido de peso!', title: nm, from: lt.top, to: w, showFrom: true, unit: 'kg', sub: `${crossed ? `Has cruzado los ${crossed} kg. ` : ''}El ${nice(lt.k)} hiciste ${fmt(lt.top, 1)} kg. A partir de ahora toca mantenerlo.` }); return;
     }
     if (w && ps && ps.w && w >= ps.w && r && ps.r && r > ps.r && !L.cel[cur.id + ':' + i]) {
       L.cel[cur.id + ':' + i] = 'r'; save(); confetti(.4);
@@ -2697,7 +2813,7 @@ const Store = (() => {
         <div class="timer"><b class="num">${fmt(kcalOf(k))}</b><span>KCAL HOY</span></div>
       </section>
       <div class="week" aria-label="Semana">${week}</div>
-      ${letterCard()}${streakCard()}${rescueCard()}
+      ${letterCard()}${streakCard()}${challengeCard()}${rescueCard()}
       ${S.goalCard ? `<div class="card glass profile"><span class="mono">Tu perfil</span><div class="pf num"><span><b>31</b>años</span><span><b>${fmt(curWeight(), 1)}</b>kg</span><span><b>1,52</b>m</span><span><b>${S.days.length}</b>días/sem</span></div><p class="small muted">Objetivo: <b style="color:var(--ink)">${GOALS[S.profile.goal].t}</b>. Ya está todo guardado: no tienes que volver a ponerlo.</p><div class="row2"><a class="btn sm ghost" href="#ajustes">Cambiar objetivo</a><button class="btn sm" data-goalok="1">Perfecto</button></div></div>` : ''}
       ${s && !(S.log[k] && S.log[k].done) ? beatCard(sid, k) : ''}
       ${installCard()}
@@ -3024,6 +3140,7 @@ const Store = (() => {
         <p class="small muted">Entrenar tarda de media unos tres meses en salir solo, sin pensarlo. Faltar un día no lo rompe: lo que cuenta es volver.</p>
         <div class="hb2 num"><span><b>${st.n}</b>${st.n === 1 ? 'semana seguida' : 'semanas seguidas'}</span><span><b>${st.total}</b>semanas cumplidas en total</span></div><p class="small muted">Tu racha cuenta semanas, no días. Un fallo al mes no la rompe.</p></div>`; })()}
       <div class="tiles" style="margin-top:12px"><div class="tile"><span class="mono">Entrenos</span><b>${h.nw}</b></div><div class="tile"><span class="mono">Series</span><b>${fmt(h.sets)}</b></div><div class="tile"><span class="mono">Levantado</span><b>${fmt(h.ton / 1000, 1)}<small>t</small></b></div><div class="tile"><span class="mono">Semanas completas</span><b>${h.weeks}</b></div></div>
+      ${(() => { const B = badges(), got = B.reduce((a, b) => a + b.tier, 0); return `<h2 class="sec">Insignias <span class="mono">${got}/${B.length * 5} niveles</span></h2><div class="badges">${B.map(b => `<button class="bdg ${b.tier ? '' : 'lock'}" style="--c:${b.tier ? TCOL[b.tier - 1] : '#3A404D'}" data-bdg="${b.id}"><span class="hexw"><span class="hex">${ic(b.ic)}</span></span><b>${b.n}</b><span class="pips">${b.T.map((_, i) => `<i class="${i < b.tier ? 'on' : ''}" style="--c:${TCOL[i]}"></i>`).join('')}</span><small class="num">${b.next ? `${fmt(b.v)} / ${fmt(b.next)}` : 'Máximo'}</small></button>`).join('')}</div><p class="small muted" style="margin:10px 2px 0">Cada insignia tiene cinco niveles: bronce, plata, oro, platino y diamante. Toca una para ver qué pide.</p>`; })()}
       <h2 class="sec">Recompensas <span class="mono">${rs.got.length}/${rs.R.length}</span></h2>
       <div class="rewards">${rs.R.map(r => `<div class="rw ${r.open ? 'open' : ''}"><span class="ri">${ic(r.open ? 'gift' : 'lock')}</span><div><b>${r.open ? (r.t ? esc(r.t) : 'Sorpresa desbloqueada') : (r.t && r.open ? esc(r.t) : 'Recompensa sorpresa')}</b><span class="small muted">${r.open ? `Pídesela a ${esc(S.settings.firma || 'Simon')}` : `Se abre a los ${fmt(r.pts)} puntos · faltan ${fmt(r.pts - h.points)}`}</span></div><span class="mono num">${fmt(r.pts)}</span></div>`).join('')}</div>
 ${(() => { const R = S.lettersRead || {}, ls = lettersOpen().filter(x => R[x.k]); return ls.length ? `<h2 class="sec">Cartas de ${esc(S.settings.firma || 'Simon')} <span class="mono">${ls.length}</span></h2><div class="stack">${ls.map(o => `<div class="card letter open"><span class="mono">${o.h}</span><p>${esc(o.t).replace(/\n/g, '<br>')}</p></div>`).join('')}</div>` : ''; })()}
@@ -3085,7 +3202,7 @@ ${(() => { const R = S.lettersRead || {}, ls = lettersOpen().filter(x => R[x.k])
         ${Store.status.snaps.length ? `<details class="snaps"><summary>Copias automáticas de este móvil (${Store.status.snaps.length})</summary><div id="snapList">${Store.status.snaps.map(d => `<div class="snap"><span>${nice(d)} ${d.slice(0, 4)}</span><button class="btn sm ghost" data-snap="${d}">Volver a esta</button></div>`).join('')}</div></details>` : ''}</div>
       <h2 class="sec">Empezar de cero</h2>
       <div class="card"><div class="inlineconfirm" id="rst"><button class="btn sm ghost" id="rst1">Borrar todos mis datos</button></div></div>
-      <p class="mono" style="text-align:center;margin-top:20px">SaraGym 4.1 · 21 nov 2026</p>
+      <p class="mono" style="text-align:center;margin-top:20px">SaraGym 5.0 · 21 nov 2026</p>
 
     </div>`;
   };
@@ -3243,7 +3360,7 @@ ${(() => { const R = S.lettersRead || {}, ls = lettersOpen().filter(x => R[x.k])
         <p class="small muted" style="margin:8px 2px 0">Cada serie que marcas se guarda con su fecha y su hora en el calendario. Si no escribes las reps, cuento las del plan.</p>
         <div class="field" style="margin-top:16px"><label for="exnote">Nota para la próxima vez</label><textarea id="exnote" class="plain" placeholder="Ej.: asiento en el 4, subir peso, cuidado con el hombro…">${esc(nt ? nt.t : '')}</textarea></div>` : (e ? `<p class="small muted" style="margin-top:12px">Así aparece en tu plan. Para apuntar series, ábrelo desde el día que toca.</p>` : '')}
       </div><div class="tabp" data-p="hist" hidden>
-      <h2 class="sec">Tu historial <span class="mono">${as ? 'kg de ayuda' : 'kg'}</span></h2>${(() => { const hh = exHistory(id).filter(x => x.top); if (hh.length < 2) return ''; const a = hh[0], b = hh[hh.length - 1], d = r1(b.top - a.top); return `<p class="story">Empezaste con <b>${fmt(a.top, 1)} kg</b> el ${nice(a.k)}. Vas por <b>${fmt(b.top, 1)} kg</b>${d ? ` <em class="${(as ? d < 0 : d > 0) ? 'up' : 'flat'}">${d > 0 ? '+' : ''}${fmt(d, 1)} kg</em>` : ''}.</p>`; })()}${histBlock(id, k)}
+      <h2 class="sec">Tu historial <span class="mono">${as ? 'kg de ayuda' : 'kg'}</span></h2>${marksHTML(id)}${(() => { const hh = exHistory(id).filter(x => x.top); if (hh.length < 2) return ''; const a = hh[0], b = hh[hh.length - 1], d = r1(b.top - a.top); return `<p class="story">Empezaste con <b>${fmt(a.top, 1)} kg</b> el ${nice(a.k)}. Vas por <b>${fmt(b.top, 1)} kg</b>${d ? ` <em class="${(as ? d < 0 : d > 0) ? 'up' : 'flat'}">${d > 0 ? '+' : ''}${fmt(d, 1)} kg</em>` : ''}.</p>`; })()}${histBlock(id, k)}
       </div><div class="tabp" data-p="learn" hidden>
       <h2 class="sec">Músculos</h2>${bodyMap(X.m)}
       <h2 class="sec">Material</h2><div class="card glass eqcard"><span class="eqi">${ic('dumb')}</span><div><span class="mono">${esc(Q[0])}</span><b>${esc(Q[1])}</b><p>${esc(Q[2])}</p><p class="small" id="gripLine" hidden></p>${/Máquina|Polea|Multipower|Banco/.test(Q[0]) ? `<div class="field" style="margin-top:10px"><label for="mysetup">Mi ajuste (se queda guardado)</label><input id="mysetup" value="${esc((S.setup || {})[id] || '')}" placeholder="Ej.: asiento 4 · respaldo 2 · pin 6"></div>` : ''}</div></div>
@@ -3330,7 +3447,7 @@ ${(() => { const R = S.lettersRead || {}, ls = lettersOpen().filter(x => R[x.k])
     if (pv) pv.onclick = () => { if (cur.idx > 0) openEx(cur.list[cur.idx - 1].id, cur.sid, cur.k); };
     if (c2) c2.onclick = closeSheet;
   }
-  function closeSheet() { $('#sheet').classList.remove('on'); $('#sheet').setAttribute('aria-hidden', 'true'); document.body.style.overflow = ''; if (viewer) viewer.pause(); wake(false); clearInterval(breathI); if (cmpURL) { URL.revokeObjectURL(cmpURL); cmpURL = null; } $('#rest').classList.remove('insheet'); render(); }
+  function closeSheet() { $('#sheet').classList.remove('on'); $('#sheet').setAttribute('aria-hidden', 'true'); document.body.style.overflow = ''; if (viewer) viewer.pause(); wake(false); setTimeout(flushBoom, 350); clearInterval(breathI); if (cmpURL) { URL.revokeObjectURL(cmpURL); cmpURL = null; } $('#rest').classList.remove('insheet'); render(); }
 
   /* Modo gimnasio: la pantalla no se apaga con un ejercicio abierto */
   let wakeL = null;
@@ -3409,8 +3526,9 @@ ${(() => { const R = S.lettersRead || {}, ls = lettersOpen().filter(x => R[x.k])
 
   /* ---------- Eventos globales ---------- */
   document.addEventListener('click', (ev) => {
-    const t = ev.target.closest('[data-letter],[data-pause],[data-ready],[data-short],[data-open],[data-warm],[data-fin],[data-finish],[data-recipe],[data-start],[data-backup],[data-undo],[data-install],[data-goalok]'); if (!t) return;
+    const t = ev.target.closest('[data-bdg],[data-letter],[data-pause],[data-ready],[data-short],[data-open],[data-warm],[data-fin],[data-finish],[data-recipe],[data-start],[data-backup],[data-undo],[data-install],[data-goalok]'); if (!t) return;
     if (t.dataset.backup) { copyBackup(null); return; }
+    if (t.dataset.bdg) { const b = badges().find(x => x.id === t.dataset.bdg); if (b) toast(b.next ? `Llevas ${fmt(b.v)} ${unitN(b.v, b.u)}. ${b.tier ? `Tienes ${TIERS[b.tier - 1].toLowerCase()}; el` : 'El'} siguiente nivel (${TIERS[b.tier].toLowerCase()}) llega a los ${fmt(b.next)}.` : `Diamante: ${fmt(b.v)} ${b.u}. No hay nivel más alto.`, b.n, b.ic); return; }
     if (t.dataset.letter) { if (t.dataset.letter === 'close') openLetter = null; else { openLetter = t.dataset.letter; (S.lettersRead = S.lettersRead || {})[openLetter] = Date.now(); save(true); confetti(.7); } render(); return; }
     if (t.dataset.pause) { ev.preventDefault(); const mk = key(monday(today())); S.pauses = S.pauses || {}; if (S.pauses[mk]) delete S.pauses[mk]; else { S.pauses[mk] = true; toast('Semana en pausa. Tu racha te espera intacta. Cuídate.', 'Sin culpa', 'heart'); } save(); render(); return; }
     if (t.dataset.ready) { const L = logOf(t.dataset.key, t.dataset.sid), v = +t.dataset.ready; L.ready = L.ready === v ? null : v; save(); render(); if (L.ready === 3) toast('Hoy es día de intentar superar algo. A por ello.', 'Con ganas', 'flame'); return; }
@@ -3424,8 +3542,9 @@ ${(() => { const R = S.lettersRead || {}, ls = lettersOpen().filter(x => R[x.k])
     if (t.dataset.fin) { const L = logOf(t.dataset.key, t.dataset.sid); L.fin = !L.fin; save(); render(); return; }
     if (t.dataset.finish) { const L = logOf(t.dataset.finish, t.dataset.sid); const prevK = Object.keys(S.log).filter(x => x < t.dataset.finish && S.log[x].done).sort().pop(), gap = prevK ? Math.round((parse(t.dataset.finish) - parse(prevK)) / 864e5) : 0;
       L.done = true; L.doneAt = Date.now(); save(true); render(); stopRest(); const stt = streak();
-      if (stt.thisN === stt.goal && key(monday(parse(t.dataset.finish))) === key(monday(today()))) { confetti(1.3); celebrate('Semana redonda', `Has cumplido tus ${stt.goal} entrenos de esta semana. Así se construye.`, 'trophy'); }
-      else if (gap > 14) love(false, 'back'); else if (L.ready === 1) love(false, 'pride'); else love(true);
+      { const kk = t.dataset.finish, exs = logEx(L).map(e => exDay(kk, e)).filter(Boolean), vol = Math.round(exs.reduce((a, r) => a + (r.vol || 0), 0)), nS = exs.reduce((a, r) => a + r.n, 0), hk = humanKg(vol);
+        boom({ kind: 'done', icon: 'check', kicker: 'Entreno completado', title: SESSIONS[L.s] ? SESSIONS[L.s].t : 'Hecho', from: 0, to: vol || nS, unit: vol ? 'kg movidos' : 'series', sub: `${nS} series · unas ${fmt(kcalOf(kk))} kcal${hk ? ` · más que ${hk}` : ''}.`, power: 1.4 }); }
+      if (gap > 14) love(false, 'back'); else if (L.ready === 1) love(false, 'pride'); else love(true);
       checkHitos(); window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); return; }
     if (t.dataset.start) { const k = t.dataset.day; if (S.log[k] && progressOf(k).done) return; S.log[k] = { s: t.dataset.start, sets: {}, kg: {}, reps: {}, warm: {}, fin: false, done: false, extra: true }; save(); render(); window.scrollTo(0, 0); }
   });
@@ -3438,7 +3557,7 @@ ${(() => { const R = S.lettersRead || {}, ls = lettersOpen().filter(x => R[x.k])
     document.body.insertAdjacentHTML('beforeend', `
       <div class="tabs"><nav aria-label="Pestañas"><a href="#inicio" data-r="inicio">${ic('home')}Inicio</a><a href="#hoy" data-r="hoy,dia,semana,ejercicios">${ic('dumb')}Entreno</a><a href="#comida" data-r="comida,recetas,intercambios">${ic('food')}Comida</a><a href="#logros" data-r="logros">${ic('trophy')}Logros</a><a href="#calendario" data-r="calendario,fecha,progreso">${ic('cal')}Historial</a></nav></div>
       <section class="sheet" id="sheet" aria-hidden="true" role="dialog" aria-label="Detalle"><div class="wrap"><div class="bar-top"><button class="iconbtn" id="shClose" aria-label="Cerrar">${ic('x')}</button><span class="mono" id="shPos"></span><span style="width:40px"></span></div></div><div class="scroll" id="shScroll"><div class="inner" id="shBody"></div></div><div class="navfoot"><div class="wrap" id="shNav"></div></div></section>
-      <div class="rest" id="rest" role="status"><div><span id="restL">Descanso</span><br><b id="restT">0:00</b></div><button id="restAdd" aria-label="Quince segundos más">+15"</button><button id="restSkip">Saltar</button></div>
+      <div class="boom" id="boom" role="status"></div><div class="rest" id="rest" role="status"><div><span id="restL">Descanso</span><br><b id="restT">0:00</b></div><button id="restAdd" aria-label="Quince segundos más">+15"</button><button id="restSkip">Saltar</button></div>
       <button class="toast" id="toast" aria-live="polite"><span class="av" id="toastI">${ic('heart')}</span><span><b id="toastT"></b><p id="toastP"></p></span></button>
       <div class="onb" id="onb" hidden></div>`);
     $('#menuBtn').onclick = openDrawer; $('#scrim').onclick = closeDrawer; $('#drawer').addEventListener('click', (e) => { if (e.target.closest('a')) closeDrawer(); });
