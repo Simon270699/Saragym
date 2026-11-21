@@ -723,6 +723,18 @@ table.hist td:first-child, table.hist th:first-child { text-align: left; }
 .exsaved { display: flex; gap: 8px; align-items: flex-start; margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; font-size: 13.5px; color: var(--ink); background: var(--good-soft); border: 1px solid rgba(46,229,157,.4); }
 .exsaved[hidden] { display: none; } .exsaved svg { width: 17px; height: 17px; flex: none; color: var(--good); margin-top: 1px; } .exsaved.pulse { animation: pop .4s cubic-bezier(.2,1.4,.3,1); }
 .card.nudge.bk { align-items: flex-start; } .card.nudge.bk .row2 { margin-top: 10px; } .card.nudge.bk .row2 .btn { flex: none; }
+
+/* ===== v5.3: reglas a la vista, fotos con fuerza, deslizador, revisión semanal ===== */
+.stepline { display: flex; gap: 8px; align-items: flex-start; margin: 8px 2px 0; font-size: 13.5px; color: var(--ink2); } .stepline svg { width: 15px; height: 15px; flex: none; color: var(--good); margin-top: 2px; } .stepline b { color: var(--ink); }
+.rules { margin: 8px 2px 0; } .rules summary { cursor: pointer; font-size: 13px; font-weight: 700; color: #FF6377; padding: 4px 0; } .rules ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 5px; font-size: 13.5px; color: var(--ink2); } .rules p { margin: 8px 0 0; }
+.phnext { margin: 0; color: var(--ink2); } .phnext b { color: var(--ink); } .phtoggle { display: inline-block; margin: 12px 2px 0; font-size: 13px; }
+.phstr { display: flex; gap: 6px; align-items: center; margin: -2px 0 8px; font-size: 12.5px; color: var(--orange); font-weight: 600; } .phstr svg { width: 14px; height: 14px; flex: none; }
+.phgrid.blur img { filter: blur(16px); transform: scale(1.15); }
+.slide { position: relative; aspect-ratio: 3 / 4; margin: 8px 10px 0; border-radius: 14px; overflow: hidden; background: var(--bg3); border: 1px solid var(--line2); }
+.slide img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; } .slide .sa { position: absolute; inset: 0; clip-path: inset(0 calc(100% - var(--x)) 0 0); }
+.slide i { position: absolute; top: 0; bottom: 0; left: var(--x); width: 2px; margin-left: -1px; background: #fff; box-shadow: 0 0 12px rgba(0,0,0,.7); } .slide i::after { content: "‹ ›"; position: absolute; top: 50%; left: 50%; translate: -50% -50%; width: 38px; height: 38px; border-radius: 50%; background: #fff; color: #0B0C10; display: grid; place-items: center; font-weight: 800; font-size: 15px; letter-spacing: 2px; }
+.slide input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; margin: 0; cursor: ew-resize; }
+.card.wkrev { display: grid; gap: 8px; margin-top: 10px; border-color: rgba(143,168,255,.35); background: linear-gradient(160deg, rgba(143,168,255,.1), rgba(143,168,255,.02)); } .wkrev .mono { color: var(--blue); } .wkrev .sum3 { margin-top: 0; } .wkrev p { margin: 0; font-size: 14.5px; }
 </style>
 <main class="app"><div id="view"></div></main>
 <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
@@ -2630,6 +2642,20 @@ const Store = (() => {
       ['sets', 'Más series que la semana pasada', `Llega a ${Math.max(40, Math.ceil(lw.sets * 1.1 / 5) * 5)} series`, Math.max(40, Math.ceil(lw.sets * 1.1 / 5) * 5), ws.sets], ['meal', 'Come con cabeza', 'Marca 12 comidas esta semana', 12, wk.reduce((a, k) => a + eatenCount(k), 0)]];
     const [id, t, d, target, val] = C[isoWeek(mon) % C.length]; return { mk, id, t, d, target, val: Math.min(target, val), done: val >= target };
   }
+  function weekReviewCard() {
+    const dw = wd(today()); if (dw !== 6 && dw !== 0) return ''; const off = dw === 0 ? -1 : 0, wk = weekKeys(off), goal = Math.max(1, S.days.length);
+    const Ls = wk.map(k => S.log[k]).filter(Boolean), dn = Ls.filter(L => L.done).length; if (!Ls.length) return '';
+    const prs = hitos().list.filter(x => x.kind === 'pr' && x.date >= wk[0] && x.date <= wk[6]).length, low = Ls.filter(L => L.ready === 1).length, hard = Ls.reduce((a, L) => a + Object.values(L.eff || {}).filter(v => v === 3).length, 0), pain = Ls.reduce((a, L) => a + Object.keys(L.pain || {}).length, 0);
+    const dec = pain >= 2 ? 'Has marcado molestias más de una vez: esta semana no subas pesos en esos ejercicios y, si siguen, enséñaselo a tu entrenador o a un fisio.' : low >= 2 && hard >= 3 ? 'Vienes cargada: semana suave. Mismos pesos y una serie menos en lo más pesado.' : dn < goal ? `Lo único que importa esta semana: llegar a ${goal} entrenos. Los pesos pueden esperar.` : prs ? 'Todo va bien: mantenemos el plan y sigues subiendo donde completes las series.' : 'Semana cumplida. Mantén el plan: lo que toca ahora es repetir.';
+    return `<div class="card glass wkrev"><span class="mono">Revisión de ${off ? 'la semana pasada' : 'tu semana'}</span><div class="sum3 num"><span><b>${dn}/${goal}</b>entrenos</span><span><b>${prs}</b>${prs === 1 ? 'récord' : 'récords'}</span><span><b>${hard}</b>al límite</span></div><p><b>Decisión:</b> ${dec}</p></div>`;
+  }
+  /* Entrenos al calendario del móvil, con aviso 30 minutos antes */
+  function icsFile() {
+    const hh = (S.settings.hour || '18:00').split(':').map(Number), f = (x) => `${x.getFullYear()}${pad(x.getMonth() + 1)}${pad(x.getDate())}T${pad(x.getHours())}${pad(x.getMinutes())}00`, ev = [];
+    for (let i = 0; i < 28; i++) { const d = addD(today(), i), sid = sessionFor(d); if (!sid) continue; const st = new Date(d); st.setHours(hh[0] || 18, hh[1] || 0, 0, 0); const en = new Date(st.getTime() + 90 * 60000);
+      ev.push(['BEGIN:VEVENT', `UID:sg-${key(d)}@saragym`, `DTSTAMP:${f(new Date())}`, `DTSTART:${f(st)}`, `DTEND:${f(en)}`, `SUMMARY:Entreno: ${SESSIONS[sid].t}`, `DESCRIPTION:${SESSIONS[sid].f}`, 'BEGIN:VALARM', 'TRIGGER:-PT30M', 'ACTION:DISPLAY', 'DESCRIPTION:Entreno en 30 minutos', 'END:VALARM', 'END:VEVENT'].join('\r\n')); }
+    return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SaraGym//ES', ...ev, 'END:VCALENDAR'].join('\r\n');
+  }
   function challengeCard() {
     const c = challenge(), left = 7 - wd(today());
     return `<div class="card glass chal ${c.done ? 'ok' : ''}"><div class="chh"><span class="mono">Reto de la semana</span><span class="mono">${c.done ? 'conseguido' : left === 1 ? 'último día' : `quedan ${left} días`}</span></div><b>${esc(c.t)}</b><span class="small muted">${esc(c.d)}</span><div class="chb"><div class="bar"><i style="width:${c.val / c.target * 100}%"></i></div><b class="num">${c.val}/${c.target}</b></div></div>`;
@@ -2651,7 +2677,7 @@ const Store = (() => {
     if (lt.as) { if (w != null && lt.top && w < lt.top && !L.cel[cur.id]) { L.cel[cur.id] = 'kg'; save(); boom({ now: true, kind: 'pr', icon: 'trophy', kicker: '¡Menos ayuda que la última vez!', title: nm, from: lt.top, to: w, showFrom: true, unit: 'kg de ayuda', sub: 'Cada kilo menos de ayuda es más fuerza tuya.' }); } return; }
     if (w && lt.top && w > lt.top && !L.cel[cur.id]) {
       L.cel[cur.id] = 'kg'; save(); const allT = Math.max(0, ...exHistory(cur.id).filter(x => x.k < cur.k).map(x => x.top || 0)), abs = w > allT, stp = BIG.includes(cur.id) ? 5 : 2, crossed = Math.floor(w / stp + 1e-6) > Math.floor(lt.top / stp + 1e-6) ? Math.floor(w / stp + 1e-6) * stp : 0;
-      boom({ now: true, kind: 'pr', icon: 'trophy', kicker: abs ? 'Récord absoluto' : '¡Enhorabuena, has subido de peso!', title: nm, from: lt.top, to: w, showFrom: true, unit: 'kg', sub: `${crossed ? `Has cruzado los ${crossed} kg. ` : ''}El ${nice(lt.k)} hiciste ${fmt(lt.top, 1)} kg. A partir de ahora toca mantenerlo.` }); return;
+      boom({ now: true, kind: 'pr', icon: 'trophy', kicker: abs ? 'Récord absoluto' : '¡Enhorabuena, has subido de peso!', title: nm, from: lt.top, to: w, showFrom: true, unit: 'kg', sub: `${(() => { const f0 = exHistory(cur.id).find(x => x.top); return f0 && f0.k !== lt.k && f0.top < lt.top ? `Empezaste con ${fmt(f0.top, 1)} kg el ${nice(f0.k)}. ` : ''; })()}${crossed ? `Has cruzado los ${crossed} kg. ` : ''}El ${nice(lt.k)} hiciste ${fmt(lt.top, 1)} kg. A partir de ahora toca mantenerlo.` }); return;
     }
     if (w && ps && ps.w && w >= ps.w && r && ps.r && r > ps.r && !L.cel[cur.id + ':' + i]) {
       L.cel[cur.id + ':' + i] = 'r'; save(); confetti(.4);
@@ -2839,7 +2865,7 @@ const Store = (() => {
         <div class="timer"><b class="num">${fmt(kcalOf(k))}</b><span>KCAL HOY</span></div>
       </section>
       <div class="week" aria-label="Semana">${week}</div>
-      ${letterCard()}${streakCard()}${challengeCard()}${rescueCard()}
+      ${letterCard()}${streakCard()}${weekReviewCard()}${challengeCard()}${rescueCard()}
       ${S.goalCard ? `<div class="card glass profile"><span class="mono">Tu perfil</span><div class="pf num"><span><b>31</b>años</span><span><b>${fmt(curWeight(), 1)}</b>kg</span><span><b>1,52</b>m</span><span><b>${S.days.length}</b>días/sem</span></div><p class="small muted">Objetivo: <b style="color:var(--ink)">${GOALS[S.profile.goal].t}</b>. Ya está todo guardado: no tienes que volver a ponerlo.</p><div class="row2"><a class="btn sm ghost" href="#ajustes">Cambiar objetivo</a><button class="btn sm" data-goalok="1">Perfecto</button></div></div>` : ''}
       ${s && !(S.log[k] && S.log[k].done) ? beatCard(sid, k) : ''}
       ${installCard()}
@@ -3050,27 +3076,31 @@ const Store = (() => {
     const sc = Math.min(1, 1400 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
     c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); return new Promise(res => c.toBlob(res, 'image/jpeg', .85));
   }
-  const POSE = { f: 'Frente', l: 'Lado', e: 'Espalda' };
+  const POSE = { f: 'Frente', l: 'Lado', e: 'Espalda' }; let phDateSel = null;
   const longDate = (k) => { const d = parse(k); return `${d.getDate()} de ${['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'][d.getMonth()]} de ${d.getFullYear()}`; };
   /* La medición más cercana a una fecha (hasta 10 días de diferencia) */
   function measNear(k) { const t = parse(k).getTime(); let best = null, bd = 11; S.measures.forEach(m => { const d = Math.abs(parse(m.date).getTime() - t) / 864e5; if (d < bd) { bd = d; best = m; } }); return best; }
   const measLine = (m) => m ? [m.weight && `${fmt(m.weight, 1)} kg`, m.waist && `cintura ${cm(m.waist)}`, m.hip && `cadera ${cm(m.hip)}`, m.thigh && `muslo ${cm(m.thigh)}`, m.arm && `brazo ${cm(m.arm)}`].filter(Boolean).join(' · ') : '';
+  const KEYLIFT = ['hipThrust', 'hipThrustMachine', 'boxSquat', 'legPress', 'hackSquat', 'ohp'];
+  function strengthNear(k) { const t = parse(k).getTime(), out = []; for (const id of KEYLIFT) { let best = null; exHistory(id).forEach(h => { if (h.top && !h.as && Math.abs(parse(h.k).getTime() - t) <= 10 * 864e5 && (!best || h.top > best)) best = h.top; }); if (best) out.push([EXI[id].n.split(' con ')[0].split(' en ')[0], best]); if (out.length === 2) break; } return out; }
+  const strLine = (k) => strengthNear(k).map(([n, v]) => `${n} ${fmt(v, 1)} kg`).join(' · ');
   const photosSorted = () => [...(S.photos || [])].sort((a, b) => a.d < b.d ? 1 : a.d > b.d ? -1 : 0);
   function photosSection() {
-    const P = photosSorted(), byD = {}; P.forEach(x => (byD[x.d] = byD[x.d] || []).push(x)); const days = Object.keys(byD), weeks = P.length > 1 ? Math.round((parse(P[0].d) - parse(P[P.length - 1].d)) / 6048e5) : 0;
+    const P = photosSorted(), byD = {}; P.forEach(x => (byD[x.d] = byD[x.d] || []).push(x)); const show = !!S.settings.phShow, nextIn = P.length ? 14 - Math.round((today() - parse(P[0].d)) / 864e5) : null; const days = Object.keys(byD), weeks = P.length > 1 ? Math.round((parse(P[0].d) - parse(P[P.length - 1].d)) / 6048e5) : 0;
     return `<h2 class="sec">Tus fotos <span class="mono">${P.length ? `${P.length} · solo en este móvil` : 'solo en este móvil'}</span></h2>
-      <div class="card glass phadd"><div class="field"><label for="phDate">Fecha de la foto</label><input id="phDate" type="date" value="${key(today())}" max="${key(today())}"></div>
+      <div class="card glass phadd"><div class="field"><label for="phDate">Fecha de la foto</label><input id="phDate" type="date" value="${phDateSel || key(today())}" max="${key(today())}"></div>
         <div class="phposes">${Object.entries(POSE).map(([k, t]) => `<button class="btn sm ghost" data-phadd="${k}">${ic('cam')}${t}</button>`).join('')}</div><input type="file" id="phIn" accept="image/*" hidden><span class="mono" id="phOk"></span>
-        <p class="small muted">Mismo sitio, misma luz y misma hora cada vez. Con una cada dos semanas basta. Las fotos no salen de tu móvil.</p></div>
+        <p class="small muted">Mismo sitio, misma luz y misma hora cada vez. Con una cada dos semanas basta: mirarse a diario no ayuda. Las fotos no salen de tu móvil.</p>${nextIn != null ? `<p class="small phnext">${nextIn > 0 ? `Próxima foto recomendada: dentro de <b>${nextIn} ${nextIn === 1 ? 'día' : 'días'}</b>.` : '<b>Ya toca foto nueva.</b> Mismo sitio y misma luz que la última.'}</p>` : ''}</div>
+      ${P.length ? `<button class="link phtoggle" data-phshow="1">${show ? 'Difuminar las miniaturas' : 'Miniaturas difuminadas por privacidad · Mostrar'}</button>` : ''}
       ${P.length >= 2 ? `<button class="btn block" id="phCmp" style="margin-top:10px">${ic('swap')}Comparar antes y después${weeks ? ` · ${weeks} ${weeks === 1 ? 'semana' : 'semanas'}` : ''}</button>` : ''}
-      ${days.length ? days.map(d => { const m = measNear(d); return `<div class="phday"><div class="phdh"><b>${longDate(d)}</b>${m && m.weight ? `<span class="num">${fmt(m.weight, 1)} kg</span>` : ''}</div><div class="phgrid">${byD[d].map(x => `<button class="ph1" data-phopen="${x.id}"><img data-ph="${x.id}" alt="${POSE[x.p]} · ${nice(x.d)}"><span>${POSE[x.p]}</span></button>`).join('')}</div></div>`; }).join('') : `<div class="empty small" style="margin-top:10px">Aún no hay fotos. La primera es la más valiosa: dentro de unas semanas te alegrarás de tenerla.</div>`}`;
+      ${days.length ? days.map(d => { const m = measNear(d); return `<div class="phday"><div class="phdh"><b>${longDate(d)}</b>${m && m.weight ? `<span class="num">${fmt(m.weight, 1)} kg</span>` : ''}</div>${strLine(d) ? `<p class="phstr">${ic('dumb')}${strLine(d)}</p>` : ''}<div class="phgrid ${show ? '' : 'blur'}">${byD[d].map(x => `<button class="ph1" data-phopen="${x.id}"><img data-ph="${x.id}" alt="${POSE[x.p]} · ${nice(x.d)}"><span>${POSE[x.p]}</span></button>`).join('')}</div></div>`; }).join('') : `<div class="empty small" style="margin-top:10px">Aún no hay fotos. La primera es la más valiosa: dentro de unas semanas te alegrarás de tenerla.</div>`}`;
   }
   async function fillPhotos(root = document) { for (const im of $$('img[data-ph]', root)) { const u = await photoURL(im.dataset.ph); if (u) im.src = u; } }
   function layer(cls, html) { let el = $('#lb'); if (!el) { el = document.createElement('div'); el.id = 'lb'; document.body.appendChild(el); } el.className = 'lb on ' + cls; el.innerHTML = html; document.body.style.overflow = 'hidden'; return el; }
   function closeLayer() { const el = $('#lb'); if (el) { el.className = 'lb'; el.innerHTML = ''; } document.body.style.overflow = ''; }
   function openPhoto(id) {
     const P = photosSorted(), i = P.findIndex(x => x.id === id); if (i < 0) return; const x = P[i], m = measNear(x.d);
-    const el = layer('one', `<div class="lbh"><button class="iconbtn" data-lb="x" aria-label="Cerrar">${ic('x')}</button><div><b>${longDate(x.d)}</b><span>${POSE[x.p]}${m ? ' · ' + measLine(m) : ''}</span></div></div>
+    const el = layer('one', `<div class="lbh"><button class="iconbtn" data-lb="x" aria-label="Cerrar">${ic('x')}</button><div><b>${longDate(x.d)}</b><span>${POSE[x.p]}${m ? ' · ' + measLine(m) : ''}${strLine(x.d) ? ' · ' + strLine(x.d) : ''}</span></div></div>
       <div class="lbimg"><img data-ph="${x.id}" alt=""></div>
       <div class="lbf"><button class="btn sm ghost" data-lb="prev" ${i >= P.length - 1 ? 'disabled' : ''}>${ic('back')}Anterior</button><button class="btn sm ghost" data-lb="dl">${ic('down')}Guardar</button><button class="btn sm ghost" data-lb="del">Borrar</button><button class="btn sm ghost" data-lb="next" ${i <= 0 ? 'disabled' : ''}>Siguiente${ic('chev')}</button></div>`);
     fillPhotos(el); let sure = false;
@@ -3084,10 +3114,13 @@ const Store = (() => {
     const A = P.find(y => y.id === aId) || firstSame, B = P.find(y => y.id === bId) || last, mA = measNear(A.d), mB = measNear(B.d), days = Math.round((parse(B.d) - parse(A.d)) / 864e5);
     const opt = (sel) => P.map(y => `<option value="${y.id}" ${y.id === sel ? 'selected' : ''}>${nice(y.d)} ${y.d.slice(2, 4)} · ${POSE[y.p]}</option>`).join('');
     const rows = [['weight', 'Peso', 'kg'], ['waist', 'Cintura', 'cm'], ['hip', 'Cadera', 'cm'], ['thigh', 'Muslo', 'cm'], ['arm', 'Brazo', 'cm']].map(([f, t, u]) => { const a = mA && mA[f], b = mB && mB[f]; if (a == null && b == null) return ''; const d = a != null && b != null ? r1(b - a) : null; return `<tr><td>${t}</td><td>${a != null ? fmt(a, 1) : '—'}</td><td>${b != null ? fmt(b, 1) : '—'}</td><td class="${d ? 'chg' : ''}">${d == null ? '' : d === 0 ? 'igual' : `${d > 0 ? '+' : ''}${fmt(d, 1)} ${u}`}</td></tr>`; }).join('');
+    const sA = strengthNear(A.d), sB = strengthNear(B.d), rows2 = [...new Set([...sA, ...sB].map(x => x[0]))].map(n => { const a = (sA.find(x => x[0] === n) || [])[1], b = (sB.find(x => x[0] === n) || [])[1], d = a != null && b != null ? r1(b - a) : null; return `<tr><td>${n}</td><td>${a != null ? fmt(a, 1) : '—'}</td><td>${b != null ? fmt(b, 1) : '—'}</td><td class="${d ? 'chg' : ''}">${d == null ? '' : d === 0 ? 'igual' : `${d > 0 ? '+' : ''}${fmt(d, 1)} kg`}</td></tr>`; }).join('');
     const el = layer('two', `<div class="lbh"><button class="iconbtn" data-lb="x" aria-label="Cerrar">${ic('x')}</button><div><b>Antes y después</b><span>${days > 0 ? `${days} días de diferencia` : days < 0 ? 'El orden está al revés: elige antes la más antigua' : 'Elige dos fechas distintas'}</span></div></div>
       <div class="cmpv"><figure><select data-side="a">${opt(A.id)}</select><div><img data-ph="${A.id}" alt=""></div><figcaption><b>${longDate(A.d)}</b></figcaption></figure><figure><select data-side="b">${opt(B.id)}</select><div><img data-ph="${B.id}" alt=""></div><figcaption><b>${longDate(B.d)}</b></figcaption></figure></div>
-      ${rows ? `<table class="coach cmpt"><thead><tr><th></th><th>Antes</th><th>Después</th><th>Cambio</th></tr></thead><tbody>${rows}</tbody></table>` : `<p class="small muted" style="padding:0 16px">Apunta peso y medidas cerca de las fechas de las fotos y aquí verás también los números.</p>`}`);
+      <span class="mono" style="display:block;margin:16px 16px 0">Desliza para comparar</span><div class="slide" style="--x:50%"><img data-ph="${B.id}" alt=""><div class="sa"><img data-ph="${A.id}" alt=""></div><i></i><input type="range" min="0" max="100" value="50" aria-label="Deslizar entre antes y después"></div>
+      ${rows ? `<table class="coach cmpt"><thead><tr><th></th><th>Antes</th><th>Después</th><th>Cambio</th></tr></thead><tbody>${rows}${rows2}</tbody></table>` : rows2 ? `<table class="coach cmpt"><thead><tr><th>Fuerza</th><th>Antes</th><th>Después</th><th>Cambio</th></tr></thead><tbody>${rows2}</tbody></table>` : `<p class="small muted" style="padding:0 16px">Apunta peso y medidas cerca de las fechas de las fotos y aquí verás también los números.</p>`}`);
     fillPhotos(el); el.onclick = (ev) => { if (ev.target.closest('[data-lb="x"]')) closeLayer(); };
+    const rg = $('.slide input', el); if (rg) rg.oninput = () => $('.slide', el).style.setProperty('--x', rg.value + '%');
     $$('select', el).forEach(sl => sl.onchange = () => openCompare(sl.dataset.side === 'a' ? sl.value : A.id, sl.dataset.side === 'b' ? sl.value : B.id));
   }
   VIEWS.progreso = () => {
@@ -3099,6 +3132,8 @@ const Store = (() => {
     for (let w = 5; w >= 0; w--) { const m0 = addD(mon, -7 * w); let kc = 0, dn = 0; for (let i = 0; i < 7; i++) { const k = key(addD(m0, i)); kc += kcalOf(k); if (S.log[k] && S.log[k].done) dn++; } wk.push({ l: w ? `S${isoWeek(m0)}` : 'Esta', v: kc, hl: !w, dn }); }
     return `<div class="wrap"><div class="vhead"><span class="mono">Se guarda solo al pulsar</span><h1>Tu <em>progreso.</em></h1><p>Fotos, peso y medidas cada 2 semanas, por la mañana y en ayunas. Tú llevas el seguimiento: todo queda guardado aquí con su fecha.</p></div>
       ${photosSection()}
+      ${(() => { const from = key(addD(today(), -27)), ks = Object.keys(S.log).filter(k => k >= from), dn = ks.filter(k => S.log[k].done).length, prs = hitos().list.filter(x => x.kind === 'pr' && x.date >= from).length, vol = Math.round(ks.reduce((a, k) => a + logEx(S.log[k]).map(e => exDay(k, e)).filter(Boolean).reduce((b, r) => b + (r.vol || 0), 0), 0)); if (!dn && !vol) return '';
+        return `<h2 class="sec">Lo que el espejo no ve <span class="mono">últimos 28 días</span></h2><div class="card glass"><div class="sum3 num" style="margin-top:0"><span><b>${dn}</b>${dn === 1 ? 'entreno' : 'entrenos'}</span><span><b>${prs}</b>${prs === 1 ? 'récord' : 'récords'}</span><span><b>${fmt(vol)}</b>kg movidos</span></div><p class="small muted" style="margin:10px 0 0">Esto no sale en las fotos, y es justo lo que acaba cambiándolas.</p></div>`; })()}
       <h2 class="sec">Peso y medidas <span class="mono">añadir</span></h2>
       <form class="card" id="mForm" autocomplete="off">
         <div class="grid2"><div class="field"><label for="mDate">Fecha</label><input id="mDate" type="date" value="${key(today())}" required></div><div class="field"><label for="mW">Peso (kg)</label><input id="mW" type="number" step="0.1" inputmode="decimal" placeholder="${fmt(curWeight(), 1)}"></div></div>
@@ -3110,7 +3145,7 @@ const Store = (() => {
         return `<h2 class="sec">Tu cuerpo ${Object.keys(M).length ? 'esta semana' : 'este mes'} <span class="mono">series</span></h2><div class="card glass">${heatBody(use)}${musBars(use)}${never.length && Object.keys(M4).length > 3 ? `<p class="small muted" style="margin:10px 0 0">En las últimas 4 semanas casi no has tocado: ${never.map(m => MUSN[m].toLowerCase()).join(', ')}.</p>` : ''}</div>`; })()}
       <h2 class="sec">Progreso de pesos <span class="mono">por ejercicio</span></h2>${liftList()}
       <h2 class="sec">Peso <span class="mono">kg</span></h2>
-      <div class="card white">${lineChart(wpts, { unit: ' kg', goal: p.target })}${(() => { const w = ms.filter(m => m.weight); if (w.length < 3) return ''; const a = w.slice(-3).reduce((x, m) => x + m.weight, 0) / 3; return `<p class="small" style="margin:8px 0 0">Tendencia (media de tus 3 últimas): <b>${fmt(a, 1)} kg</b>. Un día suelto no dice nada; la tendencia sí.</p>`; })()}<p class="small muted" style="margin:8px 0 0">IMC actual ${fmt(bmi(), 1)} · rango saludable de 18,5 a 25.</p></div>
+      <div class="card white">${lineChart(wpts, { unit: ' kg', goal: p.target })}${(() => { const w = ms.filter(m => m.weight); if (w.length < 3) return ''; const a = w.slice(-3).reduce((x, m) => x + m.weight, 0) / 3; return `<p class="small" style="margin:8px 0 0">Tendencia (media de tus 3 últimas): <b>${fmt(a, 1)} kg</b>. Un día suelto no dice nada; la tendencia sí.</p>`; })()}<p class="small muted" style="margin:8px 0 0">Durante la regla es normal pesar alrededor de medio kilo más por retención de líquido: no es grasa y se va solo.</p><p class="small muted" style="margin:8px 0 0">IMC actual ${fmt(bmi(), 1)} · rango saludable de 18,5 a 25.</p></div>
       <h2 class="sec">Medidas <span class="mono">cm</span></h2>
       <div class="grid2">${mini('waist', 'Cintura')}${mini('hip', 'Cadera')}${mini('thigh', 'Muslo')}${mini('arm', 'Brazo')}</div>
       <h2 class="sec">Entrenos por semana <span class="mono">kcal</span></h2>
@@ -3120,12 +3155,13 @@ const Store = (() => {
     </div>`;
   };
   AFTER.progreso = () => {
-    fillPhotos(); let pose = 'f'; const pin = $('#phIn'), pok = $('#phOk');
+    fillPhotos(); let pose = 'f'; const pin = $('#phIn'), pok = $('#phOk'), pdt = $('#phDate'); if (pdt) pdt.onchange = pdt.oninput = () => { phDateSel = pdt.value || null; };
     $$('[data-phadd]').forEach(b => b.onclick = () => { pose = b.dataset.phadd; pin.value = ''; pin.click(); });
-    if (pin) pin.onchange = async () => { const f = pin.files && pin.files[0]; if (!f) return; pok.textContent = 'Guardando…';
-      try { const blob = await shrink(f), id = 'p' + Date.now().toString(36), d = $('#phDate').value || key(today()); await FDB.put(id, blob); S.photos = S.photos || []; S.photos.push({ id, d, p: pose }); save(true); render(); toast(`Foto de ${POSE[pose].toLowerCase()} guardada con fecha ${nice(d)}.`, 'Guardada', 'cam'); }
+    if (pin) pin.onchange = async () => { const f = pin.files && pin.files[0]; if (!f) return; pok.textContent = 'Guardando…'; const d = phDateSel || ($('#phDate') && $('#phDate').value) || key(today()), ps = pose;
+      try { const blob = await shrink(f), id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); await FDB.put(id, blob); S.photos = S.photos || []; S.photos.push({ id, d, p: ps }); save(true); render(); toast(`Foto de ${POSE[ps].toLowerCase()} guardada con fecha ${nice(d)}.`, 'Guardada', 'cam'); }
       catch (e) { pok.textContent = 'No se ha podido guardar esa foto. Prueba con otra.'; } };
     $$('[data-phopen]').forEach(b => b.onclick = () => openPhoto(b.dataset.phopen));
+    const pt = $('[data-phshow]'); if (pt) pt.onclick = () => { S.settings.phShow = !S.settings.phShow; save(); render(); };
     const pc = $('#phCmp'); if (pc) pc.onclick = () => openCompare();
     $('#mForm').onsubmit = (ev) => {
       ev.preventDefault(); const n = (id) => { const v = parseFloat(String($(id).value).replace(',', '.')); return isFinite(v) && v > 0 ? v : null; };
@@ -3277,6 +3313,9 @@ ${(() => { const R = S.lettersRead || {}, ls = lettersOpen().filter(x => R[x.k])
       <h2 class="sec">En el gimnasio</h2>
       <div class="card stack"><button class="checkrow ${S.settings.awake !== false ? 'on' : ''}" id="sAw"><span class="box">${ic('check')}</span><span><b>Pantalla siempre encendida al entrenar</b><small>No se apaga mientras tienes abierto un ejercicio</small></span></button>
         <button class="checkrow ${S.settings.beep !== false ? 'on' : ''}" id="sBp"><span class="box">${ic('check')}</span><span><b>Sonido y vibración al acabar el descanso</b><small>Se oye con los auriculares puestos</small></span></button></div>
+      <h2 class="sec">Avisos de entreno</h2>
+      <div class="card"><div class="field"><label for="sHour">¿A qué hora sueles entrenar?</label><input id="sHour" type="time" value="${esc(S.settings.hour || '18:00')}"></div>
+        <button class="btn sm dark block" id="icsDl" style="margin-top:10px">${ic('cal')}Poner mis entrenos en el calendario del móvil</button><p class="small muted" style="margin:10px 0 0">Añade los entrenos de las próximas 4 semanas con un aviso 30 minutos antes. Sin cuentas ni permisos.</p></div>
       <h2 class="sec">Mensajes de ánimo</h2>
       <div class="card"><div class="field"><label for="sF">Firma de los mensajes</label><input id="sF" value="${esc(S.settings.firma || '')}"></div>
         <button class="checkrow ${S.settings.msgs ? 'on' : ''}" id="sM" style="margin-top:10px"><span class="box">${ic('check')}</span><span><b>Mostrar mensajes mientras uso la app</b><small>Salen arriba unos segundos, sin tapar nada</small></span></button></div>
@@ -3290,7 +3329,7 @@ ${(() => { const R = S.lettersRead || {}, ls = lettersOpen().filter(x => R[x.k])
         ${Store.status.snaps.length ? `<details class="snaps"><summary>Copias automáticas de este móvil (${Store.status.snaps.length})</summary><div id="snapList">${Store.status.snaps.map(d => `<div class="snap"><span>${nice(d)} ${d.slice(0, 4)}</span><button class="btn sm ghost" data-snap="${d}">Volver a esta</button></div>`).join('')}</div></details>` : ''}</div>
       <h2 class="sec">Empezar de cero</h2>
       <div class="card"><div class="inlineconfirm" id="rst"><button class="btn sm ghost" id="rst1">Borrar todos mis datos</button></div></div>
-      <p class="mono" style="text-align:center;margin-top:20px">SaraGym 5.2 · 21 nov 2026</p>
+      <p class="mono" style="text-align:center;margin-top:20px">SaraGym 5.3 · 21 nov 2026</p>
 
     </div>`;
   };
@@ -3333,6 +3372,8 @@ ${(() => { const R = S.lettersRead || {}, ls = lettersOpen().filter(x => R[x.k])
     $$('[data-lt]').forEach(x => x.oninput = () => { S.letters = S.letters || {}; S.letters[x.dataset.lt] = x.value; save(); });
     const lm = $('#ltMake'); if (lm) lm.onclick = () => copyText('SGL1.' + b64e({ l: S.letters || {}, r: S.rewards.map(r => r.t || '') }), $('#ltOk'), 'Código copiado. Envíaselo por WhatsApp.');
     const ll = $('#ltLoad'); if (ll) ll.onclick = () => { const raw = $('#ltCode').value.trim(), out = $('#ltOk'); try { if (!raw.startsWith('SGL1.')) throw 0; const o = b64d(raw.slice(5)); S.letters = { ...(S.letters || {}) }; Object.entries(o.l || {}).forEach(([k2, v]) => { if (v) S.letters[k2] = v; }); (o.r || []).forEach((t2, i) => { if (t2 && S.rewards[i]) S.rewards[i].t = t2; }); S.lettersLocked = true; save(true); out.textContent = 'Guardado. Se abrirán cuando llegue su momento.'; setTimeout(render, 1500); } catch (err) { out.textContent = 'Ese código no es válido. Cópialo entero, empieza por SGL1.'; } };
+    const sh2 = $('#sHour'); if (sh2) sh2.onchange = () => { S.settings.hour = sh2.value || '18:00'; save(); };
+    const idl = $('#icsDl'); if (idl) idl.onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([icsFile()], { type: 'text/calendar;charset=utf-8' })); a.download = 'entrenos-saragym.ics'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); };
     const sw = $('#sWhy'); if (sw) sw.oninput = () => { S.settings.why = sw.value.trim(); save(); };
     const tg = (id, key2) => { const b = $(id); if (b) b.onclick = () => { S.settings[key2] = S.settings[key2] === false; b.classList.toggle('on', S.settings[key2] !== false); save(); }; }; tg('#sAw', 'awake'); tg('#sBp', 'beep');
     const cd = $('#csvDl'); if (cd) cd.onclick = () => { const rows = [['Fecha', 'Sesión', 'Ejercicio', 'Serie', 'Kg', 'Reps', 'Hora', 'Esfuerzo', 'Molestia']];
@@ -3436,7 +3477,7 @@ ${(() => { const R = S.lettersRead || {}, ls = lettersOpen().filter(x => R[x.k])
       ${e ? `<div class="target"><button data-g="series"><b>${e.reps.length}</b><span>series</span></button><button data-g="${reps === 'Máx' ? 'max' : 'reps'}"><b>${reps}</b><span>${e.side ? 'reps x lado' : 'reps'}</span></button><button data-g="descanso"><b>${restTxt(e.rest)}</b><span>descanso</span></button><button data-g="RIR"><b>${e.rir != null ? e.rir : '—'}</b><span>RIR</span></button></div>` : ''}
       ${nt && nt.t ? `<div class="note pin">${ic('pin')}<span><b>Tu nota del ${nice(nt.d)}:</b> ${esc(nt.t)}</span></div>` : ''}
       ${L && prev ? `<div class="last"><div><span class="mono">La última vez · ${nice(prev.k)}</span><b class="num">${prev.warm && prev.warm.w ? `C ${fmt(prev.warm.w, 1)} · ` : ''}${setsTxt(prev)}</b></div><div class="sug ${sg.up ? 'up' : ''}"><span class="mono">Hoy</span><b class="num">${fmt(sg.kg, 1)} kg</b><small>${esc(sg.tag)}</small></div></div>
-      <p class="plan-line">${weekLine(e, sg)}</p>${best ? `<p class="small muted" style="margin:6px 2px 0">Tu récord: ${fmt(best, 1)} kg${as ? ' de ayuda (menos es mejor)' : ''}</p>` : ''}` : ''}
+      <p class="plan-line">${weekLine(e, sg)}</p>${!as ? `<p class="stepline">${ic('up')}<span>Si hoy completas las ${e.reps.length} series con <b>${fmt(sg.kg, 1)} kg</b>, la próxima vez: <b>${fmt(r1(sg.kg + stepOf(id)), 1)} kg</b>.</span></p>` : ''}<details class="rules"><summary>Cómo decido tu peso</summary><ul><li>Completas todas las series: la próxima vez subes ${fmt(stepOf(id), 1)} kg.</li><li>No las completas: repites el peso hasta lograrlo.</li><li>Las completas pero marcas «Al límite»: repites hasta que salga más cómodo.</li><li>Tres veces seguidas sin completarlo: bajas un poco y remontas.</li><li>Más de tres semanas sin hacerlo, o vienes floja: un 10 % menos ese día.</li><li>Marcaste una molestia: ese ejercicio no sube.</li></ul><p class="small muted">Nunca añado series cuando te estancas: primero recuperar, luego subir.</p></details>${best ? `<p class="small muted" style="margin:6px 2px 0">Tu récord: ${fmt(best, 1)} kg${as ? ' de ayuda (menos es mejor)' : ''}</p>` : ''}` : ''}
       ${L ? `<h2 class="sec">Tus series <span class="mono">${as ? 'kg ayuda' : 'kg'} · reps</span></h2>
         ${S.setup && S.setup[id] ? `<p class="mysetup">${ic('gear')}Tu ajuste: <b>${esc(S.setup[id])}</b></p>` : ''}${prev && !kg.some(x => x != null) ? `<button class="btn sm ghost block" id="same" style="margin-bottom:8px">${ic('rotate')}Rellenar como la última vez</button>` : ''}
         <div id="sets">${sl.map((st, i) => { const pw = prev && prev.sets[(sl[0].w ? i - 1 : i)]; const pwarm = st.w && prev && prev.warm && prev.warm.w; return `<div class="setrow ${st.w ? 'warm' : ''} ${done[i] ? 'on' : ''}" data-i="${i}"><span class="i">${st.w ? 'C' : (sl[0].w ? i : i + 1)}</span><span class="r"><b>${RL(st.reps)}</b><small>${done[i] && at[i] ? `Guardada ${hhmm(at[i])}` : st.w ? 'Calent. · 30"' : `Serie ${sl[0].w ? i : i + 1}${e.side ? ' · lado' : ''}`}</small></span><input type="text" inputmode="decimal" placeholder="${st.w ? (pwarm ? fmt(prev.warm.w, 1) : sg && !as ? fmt(roundTo(sg.kg * .5, stepOf(id)), 1) : 'kg') : (sg ? fmt(sg.kg, 1) : (pw && pw.w ? fmt(pw.w, 1) : 'kg'))}" value="${kg[i] != null ? String(kg[i]).replace('.', ',') : ''}" id="kg-${id}-${i}" class="kg" aria-label="Kilos serie ${i + 1}"><input type="text" inputmode="numeric" placeholder="${typeof st.reps === 'number' ? st.reps : 'reps'}" value="${rp[i] ?? ''}" id="rp-${id}-${i}" class="rp" aria-label="Repeticiones serie ${i + 1}"><button class="ok" aria-label="Marcar serie">${ic('check')}</button></div>`; }).join('')}</div>
@@ -3519,7 +3560,9 @@ ${(() => { const R = S.lettersRead || {}, ls = lettersOpen().filter(x => R[x.k])
       inp.oninput = () => { const L = touch(); (L.kg[cur.id] = L.kg[cur.id] || [])[i] = num(inp.value); save(); if (cur.drawPlates) cur.drawPlates(); };
       rin.oninput = () => { const L = touch(); L.reps = L.reps || {}; (L.reps[cur.id] = L.reps[cur.id] || [])[i] = num(rin.value); save(); };
       row.querySelector('.ok').onclick = () => {
-        const L = touch(); const a = L.sets[cur.id] = L.sets[cur.id] || []; a[i] = !a[i]; row.classList.toggle('on', a[i]);
+        const L = touch(); const a = L.sets[cur.id] = L.sets[cur.id] || [];
+        if (!a[i]) { const w0 = num(inp.value), lt0 = lastTime(cur.id, cur.k); if (w0 && lt0 && lt0.top && !lt0.as && w0 > lt0.top * 2 && w0 - lt0.top >= 10 && row.dataset.sure !== String(w0)) { row.dataset.sure = String(w0); toast(`¿Seguro que son ${fmt(w0, 1)} kg? La última vez fueron ${fmt(lt0.top, 1)}. Si está bien, toca otra vez el ✓.`, 'Revisa el peso', 'info'); return; } }
+        a[i] = !a[i]; row.classList.toggle('on', a[i]);
         (L.at[cur.id] = L.at[cur.id] || [])[i] = a[i] ? Date.now() : null;
         const sm = row.querySelector('.r small'); const st = setList(cur.e)[i]; sm.textContent = a[i] ? `Guardada ${hhmm(Date.now())}` : (st.w ? 'Calent. · 30"' : `Serie ${setList(cur.e)[0].w ? i : i + 1}`);
         const kgA = L.kg[cur.id] = L.kg[cur.id] || [], SL = setList(cur.e);
